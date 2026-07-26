@@ -249,6 +249,7 @@ export function PortfolioNavigation() {
             height="28"
             alt="Ed Studio — home"
             priority
+            unoptimized
           />
         </button>
 
@@ -295,6 +296,7 @@ export function PortfolioNavigation() {
             width="147"
             height="28"
             alt="Ed Studio"
+            unoptimized
           />
 
           <button
@@ -396,6 +398,7 @@ export function PortfolioNavigation() {
                 fill
                 sizes="(max-width: 900px) 100vw, 38vw"
                 loading="eager"
+                unoptimized
               />
               <span className="menu-preview-scan" aria-hidden="true" />
               <span className="menu-preview-number" aria-hidden="true">

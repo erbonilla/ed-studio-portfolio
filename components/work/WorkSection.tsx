@@ -225,6 +225,7 @@ export function WorkSection() {
                   alt=""
                   fill
                   sizes="(max-width: 900px) 100vw, 62vw"
+                  unoptimized
                 />
                 <video
                   muted
@@ -248,6 +249,7 @@ export function WorkSection() {
                   alt={project.detailAlt}
                   fill
                   sizes="(max-width: 620px) 42vw, 16vw"
+                  unoptimized
                 />
               </div>
               <figcaption>{project.videoLabel}</figcaption>
