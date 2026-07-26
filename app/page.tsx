@@ -10,8 +10,8 @@ export default function Home() {
       <IntroLoader />
       <PortfolioNavigation />
       <PortfolioHero />
-      <WorkSection />
       <AboutSection />
+      <WorkSection />
     </main>
   );
 }
