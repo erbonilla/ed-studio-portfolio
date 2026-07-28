@@ -41,7 +41,7 @@ const navigationItems: NavigationItem[] = [
     label: "Contact",
     descriptor: "Start a conversation",
     frame: "/assets/hero/frames/frame-195.jpg",
-    available: false,
+    available: true,
   },
 ];
 

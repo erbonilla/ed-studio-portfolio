@@ -4,6 +4,7 @@ import { AboutSection } from "@/components/about/AboutSection";
 import { PortfolioNavigation } from "@/components/navigation/PortfolioNavigation";
 import { WorkMarquee } from "@/components/work/WorkMarquee";
 import { WorkSection } from "@/components/work/WorkSection";
+import { ContactSection } from "@/components/contact/ContactSection";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <AboutSection />
       <WorkMarquee />
       <WorkSection />
+      <ContactSection />
     </main>
   );
 }

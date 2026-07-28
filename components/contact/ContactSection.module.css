@@ -1,0 +1,345 @@
+.section {
+  position: relative;
+  padding: clamp(72px, 8vw, 128px) clamp(10px, 1.2vw, 20px) clamp(10px, 1.2vw, 20px);
+  overflow: hidden;
+  color: var(--brand);
+  background: var(--ink);
+}
+
+.shell {
+  position: relative;
+  min-height: min(960px, 94svh);
+  overflow: hidden;
+  border: 1px solid rgba(255, 79, 24, 0.34);
+  border-radius: clamp(26px, 3vw, 48px);
+  background:
+    radial-gradient(circle at 76% 10%, rgba(255, 79, 24, 0.08), transparent 25%),
+    #171717;
+}
+
+.topline {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 68px;
+  margin: 0 clamp(18px, 2.5vw, 40px);
+  border-bottom: 1px solid rgba(255, 79, 24, 0.35);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.topline p {
+  margin: 0;
+}
+
+.topline p:nth-child(2) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.topline a {
+  justify-self: end;
+  padding: 12px 0;
+  text-decoration: none;
+}
+
+.topline a,
+.utility a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color 180ms ease;
+}
+
+.topline a:hover,
+.topline a:focus-visible,
+.utility a:hover,
+.utility a:focus-visible {
+  color: var(--white);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 5px rgba(255, 79, 24, 0.11);
+}
+
+.conversation {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: clamp(48px, 8vw, 140px);
+  align-items: end;
+  min-height: clamp(400px, 48vw, 640px);
+  padding: clamp(54px, 7vw, 112px) clamp(18px, 5vw, 80px) clamp(42px, 5vw, 76px);
+}
+
+.eyebrow {
+  margin: 0 0 clamp(28px, 4vw, 60px);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.intro h2 {
+  margin: 0;
+  color: var(--white);
+  font-family: var(--font-syne), Arial, sans-serif;
+  font-size: clamp(64px, 9.5vw, 160px);
+  font-weight: 700;
+  line-height: 0.78;
+  letter-spacing: -0.075em;
+  text-transform: uppercase;
+}
+
+.intro h2 span {
+  color: var(--brand);
+}
+
+.action {
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+.action > p {
+  max-width: 480px;
+  margin: 0 0 32px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: clamp(14px, 1.15vw, 18px);
+  line-height: 1.55;
+}
+
+.emailButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 22px 0 26px;
+  overflow: hidden;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  isolation: isolate;
+}
+
+.emailButton::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--white);
+  transform: translateX(-102%);
+  transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.emailButton:hover::before,
+.emailButton:focus-visible::before {
+  transform: translateX(0);
+}
+
+.buttonArrow {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(5, 5, 5, 0.34);
+  border-radius: 50%;
+  font-size: 20px;
+  transition: transform 360ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.emailButton:hover .buttonArrow,
+.emailButton:focus-visible .buttonArrow {
+  transform: rotate(45deg);
+}
+
+.utility {
+  display: grid;
+  grid-template-columns: 1.1fr 0.7fr 1fr;
+  margin: 0 clamp(18px, 2.5vw, 40px);
+  border-top: 1px solid rgba(255, 79, 24, 0.35);
+  border-bottom: 1px solid rgba(255, 79, 24, 0.35);
+}
+
+.utility > div {
+  display: grid;
+  gap: 10px;
+  min-height: 90px;
+  padding: 20px clamp(16px, 2vw, 30px);
+  border-right: 1px solid rgba(255, 79, 24, 0.35);
+  align-content: center;
+  font-size: clamp(12px, 1vw, 15px);
+}
+
+.utility > div:first-child {
+  padding-left: 0;
+}
+
+.utility > div:last-child {
+  border-right: 0;
+}
+
+.utility a {
+  width: fit-content;
+}
+
+.utilityLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.signature {
+  width: 100%;
+  padding: clamp(30px, 5vw, 78px) 0 clamp(24px, 3vw, 46px);
+  overflow: hidden;
+}
+
+.signature span {
+  display: block;
+  width: max-content;
+  margin-left: 50%;
+  color: var(--brand);
+  font-family: var(--font-syne), Arial, sans-serif;
+  font-size: clamp(70px, 15.2vw, 290px);
+  font-weight: 700;
+  line-height: 0.7;
+  letter-spacing: -0.085em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 66px;
+  margin: 0 clamp(18px, 2.5vw, 40px);
+  border-top: 1px solid rgba(255, 79, 24, 0.35);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer p:nth-child(2) {
+  text-align: center;
+}
+
+.footer p:last-child {
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .conversation {
+    grid-template-columns: 1fr;
+    gap: 52px;
+  }
+
+  .action {
+    display: grid;
+    grid-template-columns: 1fr minmax(260px, 0.75fr);
+    gap: 36px;
+    align-items: end;
+  }
+
+  .action > p {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .section {
+    padding-top: 52px;
+  }
+
+  .shell {
+    min-height: 0;
+    border-radius: 26px;
+  }
+
+  .topline {
+    grid-template-columns: 1fr auto;
+  }
+
+  .topline p:nth-child(2) {
+    display: none;
+  }
+
+  .conversation {
+    min-height: auto;
+    padding-top: 72px;
+  }
+
+  .intro h2 {
+    font-size: clamp(58px, 19vw, 92px);
+  }
+
+  .action {
+    display: block;
+  }
+
+  .action > p {
+    margin-bottom: 28px;
+  }
+
+  .utility {
+    grid-template-columns: 1fr;
+  }
+
+  .utility > div {
+    min-height: 78px;
+    padding-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 79, 24, 0.35);
+  }
+
+  .utility > div:last-child {
+    border-bottom: 0;
+  }
+
+  .signature {
+    padding-block: 42px 36px;
+  }
+
+  .signature span {
+    font-size: clamp(62px, 18.3vw, 112px);
+  }
+
+  .footer {
+    grid-template-columns: 1fr auto;
+  }
+
+  .footer p:nth-child(2) {
+    text-align: right;
+  }
+
+  .footer p:last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emailButton::before,
+  .buttonArrow {
+    transition: none;
+  }
+}
