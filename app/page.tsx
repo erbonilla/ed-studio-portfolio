@@ -2,6 +2,7 @@ import { IntroLoader } from "@/components/intro/IntroLoader";
 import { PortfolioHero } from "@/components/hero/PortfolioHero";
 import { AboutSection } from "@/components/about/AboutSection";
 import { PortfolioNavigation } from "@/components/navigation/PortfolioNavigation";
+import { WorkMarquee } from "@/components/work/WorkMarquee";
 import { WorkSection } from "@/components/work/WorkSection";
 
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
       <PortfolioNavigation />
       <PortfolioHero />
       <AboutSection />
+      <WorkMarquee />
       <WorkSection />
     </main>
   );
