@@ -5,6 +5,12 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { portfolioContent } from "@/lib/portfolio-content";
 
+const ABOUT_BACKGROUND_FRAME_COUNT = 80;
+const ABOUT_BACKGROUND_ROOT = "/assets/about/background";
+
+const aboutBackgroundFramePath = (index: number) =>
+  `${ABOUT_BACKGROUND_ROOT}/frame-${String(index + 1).padStart(3, "0")}.jpg`;
+
 type RevealState = {
   x: number;
   y: number;
@@ -23,6 +29,7 @@ export function AboutSection() {
   const understoryRef = useRef<HTMLDivElement>(null);
   const understoryStageRef = useRef<HTMLDivElement>(null);
   const storyRef = useRef<HTMLDivElement>(null);
+  const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const depthLensRef = useRef<HTMLDivElement>(null);
   const depthProgressRef = useRef<HTMLSpanElement>(null);
   const depthProgressValueRef = useRef<HTMLSpanElement>(null);
@@ -37,6 +44,7 @@ export function AboutSection() {
     const understory = understoryRef.current;
     const understoryStage = understoryStageRef.current;
     const story = storyRef.current;
+    const backgroundCanvas = backgroundCanvasRef.current;
     const depthLens = depthLensRef.current;
     const depthProgress = depthProgressRef.current;
     const depthProgressValue = depthProgressValueRef.current;
@@ -48,6 +56,7 @@ export function AboutSection() {
       !understory ||
       !understoryStage ||
       !story ||
+      !backgroundCanvas ||
       !depthLens ||
       !depthProgress ||
       !depthProgressValue
@@ -256,6 +265,170 @@ export function AboutSection() {
     resize();
     rafId = window.requestAnimationFrame(render);
 
+    const backgroundContext = backgroundCanvas.getContext("2d", { alpha: false });
+    const backgroundFrames: Array<HTMLImageElement | undefined> = new Array(
+      ABOUT_BACKGROUND_FRAME_COUNT,
+    );
+    let backgroundDpr = 1;
+    let backgroundLastRendered = reducedMotion
+      ? Math.floor(ABOUT_BACKGROUND_FRAME_COUNT * 0.5)
+      : 0;
+    let backgroundRequestedIndex = backgroundLastRendered;
+    let backgroundPreloadStarted = false;
+
+    const drawBackgroundCover = (image: HTMLImageElement) => {
+      if (!backgroundContext) return;
+      const canvasRatio = backgroundCanvas.width / backgroundCanvas.height;
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      let sourceWidth = image.naturalWidth;
+      let sourceHeight = image.naturalHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (imageRatio > canvasRatio) {
+        sourceWidth = image.naturalHeight * canvasRatio;
+        sourceX = (image.naturalWidth - sourceWidth) * 0.5;
+      } else {
+        sourceHeight = image.naturalWidth / canvasRatio;
+        sourceY = (image.naturalHeight - sourceHeight) * 0.5;
+      }
+
+      backgroundContext.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+      backgroundContext.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        backgroundCanvas.width,
+        backgroundCanvas.height,
+      );
+    };
+
+    const drawBackgroundFrame = (requestedIndex: number) => {
+      const clamped = Math.max(
+        0,
+        Math.min(ABOUT_BACKGROUND_FRAME_COUNT - 1, Math.round(requestedIndex)),
+      );
+      let resolved = clamped;
+
+      if (!backgroundFrames[resolved]?.complete) {
+        for (let offset = 1; offset < ABOUT_BACKGROUND_FRAME_COUNT; offset += 1) {
+          const before = clamped - offset;
+          const after = clamped + offset;
+          if (before >= 0 && backgroundFrames[before]?.complete) {
+            resolved = before;
+            break;
+          }
+          if (after < ABOUT_BACKGROUND_FRAME_COUNT && backgroundFrames[after]?.complete) {
+            resolved = after;
+            break;
+          }
+        }
+      }
+
+      const image = backgroundFrames[resolved];
+      if (!image?.complete || image.naturalWidth === 0) return;
+      backgroundLastRendered = resolved;
+      drawBackgroundCover(image);
+    };
+
+    const resizeBackground = () => {
+      const rect = understoryStage.getBoundingClientRect();
+      const displayWidth = rect.width * 1.04;
+      const displayHeight = rect.height * 1.04;
+      backgroundDpr = Math.min(window.devicePixelRatio || 1, 1.35);
+      backgroundCanvas.width = Math.max(1, Math.round(displayWidth * backgroundDpr));
+      backgroundCanvas.height = Math.max(1, Math.round(displayHeight * backgroundDpr));
+      backgroundCanvas.style.width = `${displayWidth}px`;
+      backgroundCanvas.style.height = `${displayHeight}px`;
+      drawBackgroundFrame(backgroundLastRendered);
+    };
+
+    const loadBackgroundFrame = (index: number) =>
+      new Promise<void>((resolve) => {
+        if (isDestroyed || backgroundFrames[index]) {
+          resolve();
+          return;
+        }
+
+        const image = new Image();
+        image.decoding = "async";
+        image.src = aboutBackgroundFramePath(index);
+        backgroundFrames[index] = image;
+        image.onload = () => {
+          if (
+            index === backgroundRequestedIndex ||
+            backgroundFrames[backgroundRequestedIndex]?.complete
+          ) {
+            drawBackgroundFrame(backgroundRequestedIndex);
+          }
+          resolve();
+        };
+        image.onerror = () => resolve();
+      });
+
+    const requestBackgroundFrame = (index: number) => {
+      const clamped = Math.max(
+        0,
+        Math.min(ABOUT_BACKGROUND_FRAME_COUNT - 1, Math.round(index)),
+      );
+      backgroundRequestedIndex = clamped;
+      drawBackgroundFrame(clamped);
+      for (let offset = -2; offset <= 3; offset += 1) {
+        const nearby = clamped + offset;
+        if (nearby >= 0 && nearby < ABOUT_BACKGROUND_FRAME_COUNT) {
+          void loadBackgroundFrame(nearby);
+        }
+      }
+    };
+
+    const preloadBackgroundSequence = async () => {
+      if (backgroundPreloadStarted || isDestroyed || reducedMotion) return;
+      backgroundPreloadStarted = true;
+      const anchors = [0, 20, 40, 60, ABOUT_BACKGROUND_FRAME_COUNT - 1];
+      const anchorSet = new Set(anchors);
+      const queue = [
+        ...anchors,
+        ...Array.from({ length: ABOUT_BACKGROUND_FRAME_COUNT }, (_, index) => index).filter(
+          (index) => !anchorSet.has(index),
+        ),
+      ];
+      let queueIndex = 0;
+
+      const worker = async () => {
+        while (!isDestroyed && queueIndex < queue.length) {
+          const index = queue[queueIndex];
+          queueIndex += 1;
+          await loadBackgroundFrame(index);
+        }
+      };
+
+      await Promise.all(Array.from({ length: 4 }, worker));
+    };
+
+    const initialBackgroundIndex = reducedMotion
+      ? Math.floor(ABOUT_BACKGROUND_FRAME_COUNT * 0.5)
+      : 0;
+    const backgroundResizeObserver = new ResizeObserver(resizeBackground);
+    backgroundResizeObserver.observe(understoryStage);
+    const backgroundIntersectionObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void preloadBackgroundSequence();
+          backgroundIntersectionObserver.disconnect();
+        }
+      },
+      { rootMargin: "150% 0px" },
+    );
+    backgroundIntersectionObserver.observe(understory);
+    resizeBackground();
+    void loadBackgroundFrame(initialBackgroundIndex).then(() => {
+      if (!isDestroyed) drawBackgroundFrame(initialBackgroundIndex);
+    });
+
     gsap.registerPlugin(ScrollTrigger);
     const animationContext = gsap.context(() => {
       if (reducedMotion) return;
@@ -354,11 +527,18 @@ export function AboutSection() {
               const progress = Math.round(self.progress * 100);
               depthProgressValue.textContent = String(progress).padStart(2, "0");
               gsap.set(depthProgress, { scaleY: self.progress });
+              requestBackgroundFrame(self.progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
             },
           },
         });
 
         depthTimeline
+          .fromTo(
+            backgroundCanvas,
+            { scale: 1.075, xPercent: -1.2, rotation: 0.35 },
+            { scale: 1.015, xPercent: 0.8, rotation: -0.25, duration: 1 },
+            0,
+          )
           .fromTo(
             ".about-depth-line",
             { scaleX: 0 },
@@ -398,6 +578,19 @@ export function AboutSection() {
       });
 
       motionMedia.add("(max-width: 900px)", () => {
+        const mobileBackgroundTrigger = ScrollTrigger.create({
+          trigger: understory,
+          start: "top bottom",
+          end: "bottom top",
+          onUpdate: (self) => {
+            requestBackgroundFrame(self.progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
+            gsap.set(backgroundCanvas, {
+              scale: 1.08 - self.progress * 0.045,
+              yPercent: (self.progress - 0.5) * -2.4,
+            });
+          },
+        });
+
         gsap
           .timeline({
             defaults: { ease: "power4.out" },
@@ -424,6 +617,8 @@ export function AboutSection() {
             },
             "-=0.35",
           );
+
+        return () => mobileBackgroundTrigger.kill();
       });
 
       gsap.from(".expertise-row", {
@@ -446,6 +641,8 @@ export function AboutSection() {
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(touchReleaseTimer);
       resizeObserver.disconnect();
+      backgroundResizeObserver.disconnect();
+      backgroundIntersectionObserver.disconnect();
       removeUnderstoryPointer();
       animationContext.revert();
       portrait.removeEventListener("pointerenter", onPointerEnter);
@@ -514,6 +711,12 @@ export function AboutSection() {
       <div ref={understoryRef} className="about-understory">
         <div ref={understoryStageRef} className="about-understory-stage">
           <div className="about-depth-field" aria-hidden="true">
+            <canvas
+              ref={backgroundCanvasRef}
+              className="about-background-canvas"
+              aria-hidden="true"
+            />
+            <div className="about-background-scrim" />
             {Array.from({ length: 6 }, (_, index) => (
               <i className={`about-depth-line about-depth-line-${index + 1}`} key={index} />
             ))}
