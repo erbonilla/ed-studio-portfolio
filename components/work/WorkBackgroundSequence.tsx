@@ -6,7 +6,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./WorkBackgroundSequence.module.css";
 
 const FRAME_COUNT = 240;
-const MAX_CACHED_FRAMES = 16;
+const MAX_DECODED_FRAMES = 18;
+const PREFETCH_CONCURRENCY = 8;
 
 function frameSource(index: number) {
   return `/assets/work/background/frame-${String(index + 1).padStart(3, "0")}.jpg`;
@@ -27,11 +28,18 @@ export function WorkBackgroundSequence() {
     gsap.registerPlugin(ScrollTrigger);
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const frames = new Map<number, HTMLImageElement>();
+    const fetchController = new AbortController();
+    const frameBlobs = new Map<number, Blob>();
+    const blobRequests = new Map<number, Promise<Blob | null>>();
+    const decodedFrames = new Map<number, ImageBitmap>();
+    const decodeRequests = new Map<number, Promise<ImageBitmap | null>>();
     let targetFrame = reducedMotion ? Math.floor((FRAME_COUNT - 1) * 0.38) : 0;
+    let previousTargetFrame = targetFrame;
+    let scrollDirection = 1;
     let renderedFrame = -1;
     let animationFrame = 0;
     let disposed = false;
+    let prefetchStarted = false;
 
     const resizeCanvas = () => {
       const bounds = layer.getBoundingClientRect();
@@ -46,17 +54,17 @@ export function WorkBackgroundSequence() {
       }
     };
 
-    const drawFrame = (image: HTMLImageElement, index: number) => {
-      if (disposed || !image.complete || image.naturalWidth === 0) return;
+    const drawFrame = (image: ImageBitmap, index: number) => {
+      if (disposed || image.width === 0 || image.height === 0) return;
 
       resizeCanvas();
 
       const scale = Math.max(
-        canvas.width / image.naturalWidth,
-        canvas.height / image.naturalHeight,
+        canvas.width / image.width,
+        canvas.height / image.height,
       );
-      const width = image.naturalWidth * scale;
-      const height = image.naturalHeight * scale;
+      const width = image.width * scale;
+      const height = image.height * scale;
       const x = (canvas.width - width) / 2;
       const y = (canvas.height - height) / 2;
 
@@ -66,12 +74,12 @@ export function WorkBackgroundSequence() {
       section.dataset.workBackgroundFrame = String(index + 1);
     };
 
-    const drawNearestLoadedFrame = () => {
+    const drawNearestDecodedFrame = () => {
       let nearestIndex = -1;
       let nearestDistance = Number.POSITIVE_INFINITY;
 
-      frames.forEach((image, index) => {
-        if (!image.complete || image.naturalWidth === 0) return;
+      decodedFrames.forEach((image, index) => {
+        if (image.width === 0 || image.height === 0) return;
         const distance = Math.abs(index - targetFrame);
         if (distance < nearestDistance) {
           nearestDistance = distance;
@@ -80,61 +88,158 @@ export function WorkBackgroundSequence() {
       });
 
       if (nearestIndex >= 0 && nearestIndex !== renderedFrame) {
-        const image = frames.get(nearestIndex);
+        const image = decodedFrames.get(nearestIndex);
         if (image) drawFrame(image, nearestIndex);
       }
     };
 
-    const trimFrameCache = () => {
-      if (frames.size <= MAX_CACHED_FRAMES) return;
+    const trimDecodedFrames = () => {
+      if (decodedFrames.size <= MAX_DECODED_FRAMES) return;
 
-      const removable = Array.from(frames.keys())
+      const removable = Array.from(decodedFrames.keys())
         .filter((index) => index !== renderedFrame && index !== targetFrame)
         .sort(
           (first, second) =>
             Math.abs(second - targetFrame) - Math.abs(first - targetFrame),
         );
 
-      while (frames.size > MAX_CACHED_FRAMES && removable.length > 0) {
+      while (decodedFrames.size > MAX_DECODED_FRAMES && removable.length > 0) {
         const index = removable.shift();
-        if (index !== undefined) frames.delete(index);
+        if (index === undefined) continue;
+        decodedFrames.get(index)?.close();
+        decodedFrames.delete(index);
       }
     };
 
-    const loadFrame = (index: number) => {
+    const fetchFrame = (index: number) => {
       const safeIndex = Math.max(0, Math.min(FRAME_COUNT - 1, index));
-      if (frames.has(safeIndex)) return;
+      const cachedBlob = frameBlobs.get(safeIndex);
+      if (cachedBlob) return Promise.resolve(cachedBlob);
 
-      const image = new window.Image();
-      image.decoding = "async";
-      image.src = frameSource(safeIndex);
-      frames.set(safeIndex, image);
+      const pendingRequest = blobRequests.get(safeIndex);
+      if (pendingRequest) return pendingRequest;
 
-      image.onload = () => {
-        if (disposed) return;
-        drawNearestLoadedFrame();
-        trimFrameCache();
-      };
+      const request = fetch(frameSource(safeIndex), {
+        cache: "force-cache",
+        signal: fetchController.signal,
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Frame ${safeIndex + 1} failed to load`);
+          return response.blob();
+        })
+        .then((blob) => {
+          if (disposed) return null;
+          frameBlobs.set(safeIndex, blob);
+          section.dataset.workBackgroundBuffered = String(frameBlobs.size);
+          return blob;
+        })
+        .catch(() => null)
+        .finally(() => {
+          blobRequests.delete(safeIndex);
+        });
+
+      blobRequests.set(safeIndex, request);
+      return request;
+    };
+
+    const decodeFrame = (index: number) => {
+      const safeIndex = Math.max(0, Math.min(FRAME_COUNT - 1, index));
+      const cachedFrame = decodedFrames.get(safeIndex);
+      if (cachedFrame) return Promise.resolve(cachedFrame);
+
+      const pendingDecode = decodeRequests.get(safeIndex);
+      if (pendingDecode) return pendingDecode;
+
+      const request = fetchFrame(safeIndex)
+        .then((blob) => {
+          if (!blob || disposed) return null;
+          return window.createImageBitmap(blob);
+        })
+        .then((image) => {
+          if (!image) return null;
+          if (disposed) {
+            image.close();
+            return null;
+          }
+
+          decodedFrames.set(safeIndex, image);
+          drawNearestDecodedFrame();
+          trimDecodedFrames();
+          return image;
+        })
+        .catch(() => null)
+        .finally(() => {
+          decodeRequests.delete(safeIndex);
+        });
+
+      decodeRequests.set(safeIndex, request);
+      return request;
     };
 
     const requestFrame = (index: number) => {
-      targetFrame = Math.max(0, Math.min(FRAME_COUNT - 1, index));
+      const nextFrame = Math.max(0, Math.min(FRAME_COUNT - 1, index));
+      scrollDirection = nextFrame >= previousTargetFrame ? 1 : -1;
+      previousTargetFrame = nextFrame;
+      targetFrame = nextFrame;
 
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
-        loadFrame(targetFrame);
-        loadFrame(targetFrame - 1);
-        loadFrame(targetFrame + 1);
-        loadFrame(targetFrame - 2);
-        loadFrame(targetFrame + 2);
-        drawNearestLoadedFrame();
+        const decodeOrder =
+          scrollDirection > 0
+            ? [0, 1, 2, 3, 4, -1, -2]
+            : [0, -1, -2, -3, -4, 1, 2];
+
+        decodeOrder.forEach((offset) => {
+          void decodeFrame(targetFrame + offset);
+        });
+        drawNearestDecodedFrame();
       });
     };
+
+    const prefetchSequence = () => {
+      if (prefetchStarted || disposed || reducedMotion) return;
+      prefetchStarted = true;
+
+      const anchors = Array.from(
+        { length: Math.ceil(FRAME_COUNT / 8) },
+        (_, index) => index * 8,
+      );
+      const fullSequence = Array.from({ length: FRAME_COUNT }, (_, index) => index);
+      const prefetchOrder = Array.from(
+        new Set([...anchors, FRAME_COUNT - 1, ...fullSequence]),
+      );
+      let cursor = 0;
+
+      const worker = async () => {
+        while (!disposed && cursor < prefetchOrder.length) {
+          const index = prefetchOrder[cursor];
+          cursor += 1;
+          await fetchFrame(index);
+        }
+      };
+
+      void Promise.all(
+        Array.from({ length: PREFETCH_CONCURRENCY }, () => worker()),
+      ).then(() => {
+        if (!disposed) section.dataset.workBackgroundReady = "true";
+      });
+    };
+
+    const prefetchObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          prefetchSequence();
+          prefetchObserver.disconnect();
+        }
+      },
+      { rootMargin: "240% 0px" },
+    );
+    prefetchObserver.observe(section);
 
     const resizeObserver = new ResizeObserver(() => {
       resizeCanvas();
       renderedFrame = -1;
-      drawNearestLoadedFrame();
+      drawNearestDecodedFrame();
     });
     resizeObserver.observe(layer);
 
@@ -159,10 +264,18 @@ export function WorkBackgroundSequence() {
     return () => {
       disposed = true;
       window.cancelAnimationFrame(animationFrame);
+      fetchController.abort();
+      prefetchObserver.disconnect();
       resizeObserver.disconnect();
       scrollSequence?.kill();
-      frames.clear();
+      decodedFrames.forEach((image) => image.close());
+      decodedFrames.clear();
+      decodeRequests.clear();
+      frameBlobs.clear();
+      blobRequests.clear();
       delete section.dataset.workBackgroundFrame;
+      delete section.dataset.workBackgroundBuffered;
+      delete section.dataset.workBackgroundReady;
       section.style.removeProperty("--work-background-progress");
     };
   }, []);
