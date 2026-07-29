@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { WorkBackgroundSequence } from "./WorkBackgroundSequence";
 
 const projects = [
   {
@@ -187,6 +188,8 @@ export function WorkSection() {
 
   return (
     <section ref={sectionRef} id="work" className="work-section" aria-labelledby="work-title">
+      <WorkBackgroundSequence />
+
       <div className="work-introduction">
         <p className="work-kicker">
           <span>Selected work</span>
