@@ -182,8 +182,10 @@ export function WorkBackgroundSequence() {
       previousTargetFrame = nextFrame;
       targetFrame = nextFrame;
 
-      window.cancelAnimationFrame(animationFrame);
+      if (animationFrame !== 0) return;
+
       animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = 0;
         const decodeOrder =
           scrollDirection > 0
             ? [0, 1, 2, 3, 4, -1, -2]
