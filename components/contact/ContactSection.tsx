@@ -109,8 +109,8 @@ export function ContactSection() {
           </div>
         </div>
 
-        <div className={styles.signature} aria-label="ED-BONILLA">
-          <span ref={signatureRef}>ED-BONILLA</span>
+        <div className={styles.signature} aria-label="ED BONILLA">
+          <span ref={signatureRef}>ED BONILLA</span>
         </div>
 
         <footer className={styles.footer}>
