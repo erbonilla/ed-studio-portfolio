@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 import styles from "./ContactSection.module.css";
 
 const EMAIL = "erbonilla@outlook.com";
@@ -83,12 +84,14 @@ export function ContactSection() {
               Product challenges, design systems, accessibility, or a role where thoughtful
               design can create real momentum.
             </p>
-            <a className={styles.emailButton} href={`mailto:${EMAIL}`}>
-              <span>Start a conversation</span>
-              <span className={styles.buttonArrow} aria-hidden="true">
-                ↗
-              </span>
-            </a>
+            <Button04
+              className={styles.contactButton}
+              href={`mailto:${EMAIL}`}
+              text="Start a conversation"
+              variant="brand"
+              size="large"
+              fullWidth
+            />
           </div>
         </div>
 

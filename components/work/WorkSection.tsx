@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 import { WorkBackgroundSequence } from "./WorkBackgroundSequence";
 
 const projects = [
@@ -297,14 +298,22 @@ export function WorkSection() {
               </ul>
 
               <div className="project-actions">
-                <a href={project.caseStudy} target="_blank" rel="noreferrer">
-                  <span>Read case study</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
-                <a href={project.repository} target="_blank" rel="noreferrer">
-                  <span>View repository</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
+                <Button04
+                  href={project.caseStudy}
+                  text="Read case study"
+                  variant="dark"
+                  size="medium"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+                <Button04
+                  href={project.repository}
+                  text="View repository"
+                  variant="outline-dark"
+                  size="medium"
+                  target="_blank"
+                  rel="noreferrer"
+                />
               </div>
             </div>
           </article>

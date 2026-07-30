@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { portfolioContent } from "@/lib/portfolio-content";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 
 const FRAME_COUNT = 195;
 const FRAME_ROOT = "/assets/hero/frames";
@@ -445,22 +446,22 @@ export function PortfolioHero() {
             </p>
 
             <div className="hero-actions" aria-label="Featured destinations">
-              <a
+              <Button04
                 className="hero-action hero-action-primary"
                 href="#work"
+                text="My work"
+                variant="brand"
+                size="medium"
                 onClick={(event) => requestSection(event, "work")}
-              >
-                <span>My work</span>
-                <span aria-hidden="true">↗</span>
-              </a>
-              <a
+              />
+              <Button04
                 className="hero-action hero-action-secondary"
                 href="#about"
+                text="More about me"
+                variant="outline-light"
+                size="medium"
                 onClick={(event) => requestSection(event, "about")}
-              >
-                <span>More about me</span>
-                <span aria-hidden="true">↘</span>
-              </a>
+              />
             </div>
           </div>
         </div>

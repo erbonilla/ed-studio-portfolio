@@ -113,6 +113,10 @@
   line-height: 1.55;
 }
 
+.contactButton {
+  max-width: 480px;
+}
+
 .emailButton {
   position: relative;
   display: flex;
