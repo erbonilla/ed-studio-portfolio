@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import GlitchText from "@/components/effects/GlitchText";
+import Shuffle from "@/components/effects/Shuffle";
 import SplitText from "@/components/effects/SplitText";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 import styles from "./ContactSection.module.css";
@@ -109,14 +109,25 @@ export function ContactSection() {
         </div>
 
         <div className={styles.signature}>
-          <GlitchText
+          <Shuffle
+            text="ED BONILLA"
+            tag="span"
             className={styles.signatureTrack}
-            speed={0.8}
-            enableShadows
-            enableOnHover
-          >
-            ED BONILLA
-          </GlitchText>
+            shuffleDirection="right"
+            duration={0.48}
+            animationMode="evenodd"
+            shuffleTimes={2}
+            ease="power3.out"
+            stagger={0.04}
+            threshold={0.12}
+            rootMargin="-40px"
+            scrambleCharset="EDBONILA/+"
+            colorFrom="#ffffff"
+            colorTo="#ff4f18"
+            triggerOnce
+            triggerOnHover
+            respectReducedMotion
+          />
         </div>
 
         <footer className={styles.footer}>

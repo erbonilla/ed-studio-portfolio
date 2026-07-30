@@ -177,6 +177,7 @@
   text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
+  visibility: visible !important;
 }
 
 .footer {
