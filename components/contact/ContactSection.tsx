@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import GlitchText from "@/components/effects/GlitchText";
+import SplitText from "@/components/effects/SplitText";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 import styles from "./ContactSection.module.css";
 
@@ -57,11 +58,21 @@ export function ContactSection() {
             <p className={styles.eyebrow} data-contact-reveal>
               Have something complex in mind?
             </p>
-            <h2 id="contact-title" data-contact-reveal>
-              Let&apos;s make
-              <br />
-              it <span>clear.</span>
-            </h2>
+            <SplitText
+              id="contact-title"
+              tag="h2"
+              text="LET'S MAKE IT CLEAR"
+              className={styles.splitHeadline}
+              delay={45}
+              duration={0.72}
+              ease="power3.out"
+              splitType="words, chars"
+              from={{ opacity: 0, y: 72, rotateX: -55 }}
+              to={{ opacity: 1, y: 0, rotateX: 0 }}
+              threshold={0.18}
+              rootMargin="-60px"
+              textAlign="left"
+            />
           </div>
 
           <div className={styles.action} data-contact-reveal>

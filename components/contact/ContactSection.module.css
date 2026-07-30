@@ -85,8 +85,9 @@
   text-transform: uppercase;
 }
 
-.intro h2 {
+.splitHeadline {
   margin: 0;
+  max-width: 6.2ch;
   color: var(--white);
   font-family: var(--font-syne), Arial, sans-serif;
   font-size: clamp(64px, 9.5vw, 160px);
@@ -96,7 +97,7 @@
   text-transform: uppercase;
 }
 
-.intro h2 span {
+.splitHeadline :global(.split-word:last-child) {
   color: var(--brand);
 }
 
@@ -244,7 +245,7 @@
     padding-top: 72px;
   }
 
-  .intro h2 {
+  .splitHeadline {
     font-size: clamp(58px, 19vw, 92px);
   }
 

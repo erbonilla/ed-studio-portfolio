@@ -1,0 +1,27 @@
+.split-parent {
+  vertical-align: top;
+}
+
+.split-line,
+.split-word,
+.split-char {
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
+.split-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-parent,
+  .split-line,
+  .split-word,
+  .split-char {
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+}
