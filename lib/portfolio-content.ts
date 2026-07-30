@@ -1,7 +1,7 @@
 export const portfolioContent = {
   hero: {
     name: "Edgar Bonilla G.",
-    role: "Senior UI/UX Designer",
+    role: "UI/UX Designer",
     domains: "Health · Wellness · Fitness · Endurance",
     location: "Costa Rica · Remote",
     headline: ["Designing", "clarity", "into motion."],

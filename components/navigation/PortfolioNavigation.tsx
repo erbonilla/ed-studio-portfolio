@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 
 type NavigationId = "home" | "about" | "work" | "contact";
 
@@ -268,16 +269,14 @@ export function PortfolioNavigation() {
           </span>
         </button>
 
-        <button
+        <Button04
           className="nav-collaboration-cta"
-          type="button"
+          text="Let's work together"
+          compactText="Let's talk"
+          variant="brand"
+          size="small"
           onClick={() => openMenu("contact")}
-        >
-          <span>Let&apos;s work together</span>
-          <span className="nav-cta-arrow" aria-hidden="true">
-            ↗
-          </span>
-        </button>
+        />
       </header>
 
       <div
@@ -315,20 +314,14 @@ export function PortfolioNavigation() {
             </span>
           </button>
 
-          <button
+          <Button04
             className="menu-collaboration-cta"
-            type="button"
-            aria-label="Let's work together"
+            text="Let's work together"
+            compactText="Let's talk"
+            variant="brand"
+            size="small"
             onClick={() => setActiveId("contact")}
-          >
-            <span className="menu-cta-full">Let&apos;s work together</span>
-            <span className="menu-cta-compact" aria-hidden="true">
-              Let&apos;s talk
-            </span>
-            <span className="nav-cta-arrow" aria-hidden="true">
-              ↗
-            </span>
-          </button>
+          />
         </div>
 
         <div className="portfolio-menu-grid">

@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { portfolioContent } from "@/lib/portfolio-content";
+import { DecryptedText, type DecryptedTextHandle } from "@/components/effects/DecryptedText";
 
 const ABOUT_BACKGROUND_FRAME_COUNT = 80;
 const ABOUT_BACKGROUND_ROOT = "/assets/about/background";
+const ABOUT_STORY_CARD_LABELS = ["Practice", "Working principles"];
 
 const aboutBackgroundFramePath = (index: number) =>
   `${ABOUT_BACKGROUND_ROOT}/frame-${String(index + 1).padStart(3, "0")}.jpg`;
@@ -33,6 +35,7 @@ export function AboutSection() {
   const depthLensRef = useRef<HTMLDivElement>(null);
   const depthProgressRef = useRef<HTMLSpanElement>(null);
   const depthProgressValueRef = useRef<HTMLSpanElement>(null);
+  const storyDecryptRefs = useRef<Array<DecryptedTextHandle | null>>([]);
   const [canvasReady, setCanvasReady] = useState(false);
   const { about, expertise } = portfolioContent;
 
@@ -429,6 +432,10 @@ export function AboutSection() {
       if (!isDestroyed) drawBackgroundFrame(initialBackgroundIndex);
     });
 
+    const triggerCardDecrypt = (index: number) => {
+      storyDecryptRefs.current[index]?.trigger();
+    };
+
     gsap.registerPlugin(ScrollTrigger);
     const animationContext = gsap.context(() => {
       if (reducedMotion) return;
@@ -513,6 +520,69 @@ export function AboutSection() {
       );
 
       const motionMedia = gsap.matchMedia();
+      const appendStorySequence = (timeline: ReturnType<typeof gsap.timeline>) => {
+        timeline
+          .fromTo(
+            ".about-story-lead-line > span",
+            { yPercent: 112, rotationX: -68, autoAlpha: 0 },
+            {
+              yPercent: 0,
+              rotationX: 0,
+              autoAlpha: 1,
+              duration: 0.22,
+              stagger: 0.04,
+            },
+            0.04,
+          )
+          .fromTo(
+            ".about-depth-arrow",
+            { yPercent: -65, rotate: 0 },
+            { yPercent: 0, rotate: 180, duration: 0.18 },
+            0.31,
+          )
+          .fromTo(
+            ".about-story-card:nth-child(1)",
+            { y: 34, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.08 },
+            0.4,
+          )
+          .fromTo(
+            ".about-story-card:nth-child(1) .about-story-card-inner",
+            { rotationY: 0 },
+            { rotationY: 180, duration: 0.15 },
+            0.44,
+          )
+          .call(() => triggerCardDecrypt(0), undefined, 0.6)
+          .fromTo(
+            ".about-story-card:nth-child(2)",
+            { y: 34, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.08 },
+            0.59,
+          )
+          .fromTo(
+            ".about-story-card:nth-child(2) .about-story-card-inner",
+            { rotationY: 0 },
+            { rotationY: 180, duration: 0.15 },
+            0.63,
+          )
+          .call(() => triggerCardDecrypt(1), undefined, 0.79)
+          .fromTo(
+            ".about-signals span",
+            {
+              y: 14,
+              autoAlpha: 0,
+              clipPath: "inset(0 100% 0 0)",
+            },
+            {
+              y: 0,
+              autoAlpha: 1,
+              clipPath: "inset(0 0% 0 0)",
+              duration: 0.08,
+              stagger: 0.025,
+            },
+            0.82,
+          );
+      };
 
       motionMedia.add("(min-width: 901px)", () => {
         const depthTimeline = gsap.timeline({
@@ -544,37 +614,9 @@ export function AboutSection() {
             { scaleX: 0 },
             { scaleX: 1, duration: 0.46, stagger: 0.035 },
             0,
-          )
-          .fromTo(
-            ".about-story-lead-line > span",
-            { yPercent: 112, rotationX: -68, autoAlpha: 0 },
-            {
-              yPercent: 0,
-              rotationX: 0,
-              autoAlpha: 1,
-              duration: 0.55,
-              stagger: 0.075,
-            },
-            0.06,
-          )
-          .fromTo(
-            ".about-depth-arrow",
-            { yPercent: -65, rotate: 0 },
-            { yPercent: 0, rotate: 180, duration: 0.32 },
-            0.26,
-          )
-          .fromTo(
-            ".about-story-detail",
-            { y: 48, autoAlpha: 0 },
-            { y: 0, autoAlpha: 1, duration: 0.3 },
-            0.62,
-          )
-          .fromTo(
-            ".about-signals span",
-            { y: 18, autoAlpha: 0 },
-            { y: 0, autoAlpha: 1, duration: 0.18, stagger: 0.025 },
-            0.79,
           );
+
+        appendStorySequence(depthTimeline);
       });
 
       motionMedia.add("(max-width: 900px)", () => {
@@ -582,6 +624,7 @@ export function AboutSection() {
           trigger: understory,
           start: "top bottom",
           end: "bottom top",
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             requestBackgroundFrame(self.progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
             gsap.set(backgroundCanvas, {
@@ -593,45 +636,141 @@ export function AboutSection() {
 
         gsap
           .timeline({
-            defaults: { ease: "power4.out" },
+            defaults: { ease: "none" },
             scrollTrigger: {
-              trigger: understory,
-              start: "top 72%",
-              once: true,
+              trigger: ".about-story-lead",
+              start: "top 88%",
+              end: "bottom 42%",
+              scrub: 0.4,
             },
           })
-          .from(".about-story-lead-line > span", {
-            yPercent: 108,
-            rotationX: -42,
-            autoAlpha: 0,
-            duration: 0.82,
-            stagger: 0.08,
-          })
-          .from(
-            ".about-story-detail, .about-signals",
+          .fromTo(
+            ".about-story-lead-line > span",
+            { yPercent: 108, rotationX: -52, autoAlpha: 0 },
             {
-              y: 36,
-              autoAlpha: 0,
-              duration: 0.58,
-              stagger: 0.08,
+              yPercent: 0,
+              rotationX: 0,
+              autoAlpha: 1,
+              duration: 0.72,
+              stagger: 0.07,
             },
-            "-=0.35",
+          )
+          .fromTo(
+            ".about-depth-arrow",
+            { yPercent: -65, rotate: 0 },
+            { yPercent: 0, rotate: 180, duration: 0.28 },
+            0.48,
           );
+
+        gsap.utils.toArray<HTMLElement>(".about-story-card").forEach((card, cardIndex) => {
+          const inner = card.querySelector<HTMLElement>(".about-story-card-inner");
+          if (!inner) return;
+
+          gsap.fromTo(
+            card,
+            { y: 36, autoAlpha: 0 },
+            {
+              y: 0,
+              autoAlpha: 1,
+              ease: "none",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 90%",
+                end: "top 72%",
+                scrub: 0.35,
+              },
+            },
+          );
+
+          gsap.fromTo(
+            inner,
+            { rotationY: 0 },
+            {
+              rotationY: 180,
+              ease: "none",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 72%",
+                end: "top 34%",
+                scrub: 0.45,
+                onUpdate: (self) => {
+                  if (self.progress >= 0.5) triggerCardDecrypt(cardIndex);
+                },
+              },
+            },
+          );
+        });
+
+        gsap.fromTo(
+          ".about-signals span",
+          {
+            y: 14,
+            autoAlpha: 0,
+            clipPath: "inset(0 100% 0 0)",
+          },
+          {
+            y: 0,
+            autoAlpha: 1,
+            clipPath: "inset(0 0% 0 0)",
+            duration: 0.6,
+            stagger: 0.18,
+            ease: "none",
+            scrollTrigger: {
+              trigger: ".about-signals",
+              start: "top 90%",
+              end: "bottom 52%",
+              scrub: 0.4,
+            },
+          },
+        );
 
         return () => mobileBackgroundTrigger.kill();
       });
 
-      gsap.from(".expertise-row", {
-        y: 56,
-        autoAlpha: 0,
-        duration: 0.9,
-        stagger: 0.11,
-        ease: "power3.out",
+      const expertiseTimeline = gsap.timeline({
+        defaults: { ease: "power3.out" },
         scrollTrigger: {
-          trigger: ".expertise-list",
-          start: "top 78%",
+          trigger: ".expertise",
+          start: "top 72%",
+          once: true,
         },
       });
+
+      expertiseTimeline
+        .from(".expertise-heading > *", {
+          y: 36,
+          autoAlpha: 0,
+          duration: 0.72,
+          stagger: 0.1,
+        })
+        .from(
+          ".expertise-row",
+          {
+            y: 72,
+            rotationX: 7,
+            scale: 0.985,
+            autoAlpha: 0,
+            transformPerspective: 900,
+            transformOrigin: "50% 100%",
+            duration: 0.92,
+            stagger: {
+              each: 0.13,
+              from: "start",
+              grid: [2, 2],
+            },
+          },
+          "-=0.38",
+        )
+        .from(
+          ".expertise-index, .expertise-arrow",
+          {
+            y: 14,
+            autoAlpha: 0,
+            duration: 0.46,
+            stagger: 0.035,
+          },
+          "-=0.54",
+        );
 
       return () => motionMedia.revert();
     }, section);
@@ -748,8 +887,43 @@ export function AboutSection() {
               </span>
             </p>
             <div className="about-story-detail">
-              {about.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {about.paragraphs.map((paragraph, index) => (
+                <div className="about-story-card" key={paragraph}>
+                  <div className="about-story-card-inner">
+                    <div className="about-story-card-face about-story-card-front" aria-hidden="true">
+                      <span className="about-story-card-index">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="about-story-card-label">
+                        {ABOUT_STORY_CARD_LABELS[index] ?? "Perspective"}
+                      </span>
+                      <span className="about-story-card-action">
+                        Scroll to reveal <i>↘</i>
+                      </span>
+                    </div>
+                    <div className="about-story-card-face about-story-card-back">
+                      <span className="about-story-card-index" aria-hidden="true">
+                        {String(index + 1).padStart(2, "0")} / 02
+                      </span>
+                      <p>
+                        <DecryptedText
+                          ref={(handle) => {
+                            storyDecryptRefs.current[index] = handle;
+                          }}
+                          text={paragraph}
+                          animateOn="manual"
+                          sequential
+                          revealDirection="start"
+                          speed={12}
+                          useOriginalCharsOnly
+                          parentClassName="about-story-card-decrypt"
+                          className="about-story-card-decrypt-char"
+                          encryptedClassName="about-story-card-decrypt-char is-encrypted"
+                        />
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
             <div className="about-signals" aria-label="Professional highlights">

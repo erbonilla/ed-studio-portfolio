@@ -4,7 +4,11 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Shuffle } from "@/components/effects/Shuffle";
+import { LogoLoop } from "@/components/effects/LogoLoop";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 import { WorkBackgroundSequence } from "./WorkBackgroundSequence";
+import { toolLogos } from "./tool-logos";
 
 const projects = [
   {
@@ -94,7 +98,7 @@ export function WorkSection() {
     const animationContext = gsap.context(() => {
       if (reducedMotion) return;
 
-      gsap.from(".work-kicker, .work-heading, .work-intro", {
+      gsap.from(".work-kicker, .work-intro", {
         y: 48,
         autoAlpha: 0,
         duration: 0.9,
@@ -103,6 +107,18 @@ export function WorkSection() {
         scrollTrigger: {
           trigger: ".work-introduction",
           start: "top 78%",
+        },
+      });
+
+      gsap.from(".work-tools-kicker, .work-tools-loop", {
+        y: 34,
+        autoAlpha: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".work-tools",
+          start: "top 85%",
         },
       });
 
@@ -196,8 +212,38 @@ export function WorkSection() {
           <span>02 case studies</span>
         </p>
         <h2 id="work-title" className="work-heading">
-          Built around
-          <span>real constraints.</span>
+          <Shuffle
+            text="Built around"
+            tag="span"
+            textAlign="left"
+            shuffleDirection="right"
+            duration={0.5}
+            animationMode="evenodd"
+            shuffleTimes={2}
+            ease="power3.out"
+            stagger={0.035}
+            threshold={0.2}
+            triggerOnce
+            triggerOnHover
+            respectReducedMotion
+          />
+          <span className="work-heading-accent">
+            <Shuffle
+              text="real constraints."
+              tag="span"
+              textAlign="left"
+              shuffleDirection="right"
+              duration={0.5}
+              animationMode="evenodd"
+              shuffleTimes={2}
+              ease="power3.out"
+              stagger={0.035}
+              threshold={0.2}
+              triggerOnce
+              triggerOnHover
+              respectReducedMotion
+            />
+          </span>
         </h2>
         <p className="work-intro">
           Two self-initiated product studies about what happens when context, ability,
@@ -297,18 +343,44 @@ export function WorkSection() {
               </ul>
 
               <div className="project-actions">
-                <a href={project.caseStudy} target="_blank" rel="noreferrer">
-                  <span>Read case study</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
-                <a href={project.repository} target="_blank" rel="noreferrer">
-                  <span>View repository</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
+                <Button04
+                  href={project.caseStudy}
+                  text="Read case study"
+                  variant="dark"
+                  size="medium"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+                <Button04
+                  href={project.repository}
+                  text="View repository"
+                  variant="outline-dark"
+                  size="medium"
+                  target="_blank"
+                  rel="noreferrer"
+                />
               </div>
             </div>
           </article>
         ))}
+      </div>
+
+      <div className="work-tools">
+        <p className="work-tools-kicker">
+          <span>Tools &amp; technology</span>
+          <span>{String(toolLogos.length).padStart(2, "0")} in the toolkit</span>
+        </p>
+        <LogoLoop
+          className="work-tools-loop"
+          logos={toolLogos}
+          speed={90}
+          direction="left"
+          logoHeight={34}
+          gap={64}
+          hoverSpeed={0}
+          scaleOnHover
+          ariaLabel="Tools and technology used to design and build this portfolio"
+        />
       </div>
     </section>
   );

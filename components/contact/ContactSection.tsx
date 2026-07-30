@@ -3,18 +3,17 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Button04 } from "@/components/ui/animated-arrow-button";
 import styles from "./ContactSection.module.css";
 
 const EMAIL = "erbonilla@outlook.com";
 
 export function ContactSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const signatureRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
-    const signature = signatureRef.current;
-    if (!section || !signature) return;
+    if (!section) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -35,20 +34,6 @@ export function ContactSection() {
         },
       });
 
-      gsap.fromTo(
-        signature,
-        { xPercent: -53 },
-        {
-          xPercent: -47,
-          ease: "none",
-          scrollTrigger: {
-            trigger: signature,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.7,
-          },
-        },
-      );
     }, section);
 
     return () => context.revert();
@@ -83,12 +68,14 @@ export function ContactSection() {
               Product challenges, design systems, accessibility, or a role where thoughtful
               design can create real momentum.
             </p>
-            <a className={styles.emailButton} href={`mailto:${EMAIL}`}>
-              <span>Start a conversation</span>
-              <span className={styles.buttonArrow} aria-hidden="true">
-                ↗
-              </span>
-            </a>
+            <Button04
+              className={styles.contactButton}
+              href={`mailto:${EMAIL}`}
+              text="Start a conversation"
+              variant="brand"
+              size="large"
+              fullWidth
+            />
           </div>
         </div>
 
@@ -110,7 +97,9 @@ export function ContactSection() {
         </div>
 
         <div className={styles.signature} aria-label="ED BONILLA">
-          <span ref={signatureRef}>ED BONILLA</span>
+          <span className={styles.signatureTrack} aria-hidden="true">
+            ED BONILLA
+          </span>
         </div>
 
         <footer className={styles.footer}>

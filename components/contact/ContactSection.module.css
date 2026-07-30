@@ -113,54 +113,8 @@
   line-height: 1.55;
 }
 
-.emailButton {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-  padding: 0 22px 0 26px;
-  overflow: hidden;
-  border-radius: 999px;
-  color: var(--ink);
-  background: var(--brand);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-  isolation: isolate;
-}
-
-.emailButton::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: var(--white);
-  transform: translateX(-102%);
-  transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.emailButton:hover::before,
-.emailButton:focus-visible::before {
-  transform: translateX(0);
-}
-
-.buttonArrow {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid rgba(5, 5, 5, 0.34);
-  border-radius: 50%;
-  font-size: 20px;
-  transition: transform 360ms cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.emailButton:hover .buttonArrow,
-.emailButton:focus-visible .buttonArrow {
-  transform: rotate(45deg);
+.contactButton {
+  max-width: 480px;
 }
 
 .utility {
@@ -202,25 +156,26 @@
 }
 
 .signature {
+  display: grid;
   width: 100%;
-  padding: clamp(30px, 5vw, 78px) 0 clamp(24px, 3vw, 46px);
+  min-height: clamp(180px, 20vw, 360px);
+  padding: clamp(28px, 3vw, 52px) clamp(18px, 2.5vw, 40px);
   overflow: hidden;
+  place-items: center;
 }
 
-.signature span {
+.signatureTrack {
   display: block;
-  width: max-content;
-  margin-left: 50%;
+  width: 100%;
   color: var(--brand);
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(70px, 15.2vw, 290px);
+  font-size: clamp(76px, 15.8vw, 300px);
   font-weight: 700;
-  line-height: 0.7;
-  letter-spacing: -0.085em;
+  line-height: 0.72;
+  letter-spacing: -0.09em;
+  text-align: center;
   text-transform: uppercase;
-  transform: translateX(-50%);
   white-space: nowrap;
-  will-change: transform;
 }
 
 .footer {
@@ -317,11 +272,12 @@
   }
 
   .signature {
-    padding-block: 42px 36px;
+    min-height: 150px;
+    padding-block: 34px 30px;
   }
 
-  .signature span {
-    font-size: clamp(62px, 18.3vw, 112px);
+  .signatureTrack {
+    font-size: clamp(58px, 17.6vw, 108px);
   }
 
   .footer {
@@ -334,12 +290,5 @@
 
   .footer p:last-child {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .emailButton::before,
-  .buttonArrow {
-    transition: none;
   }
 }
