@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import GlitchText from "@/components/effects/GlitchText";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 import styles from "./ContactSection.module.css";
 
@@ -96,10 +97,15 @@ export function ContactSection() {
           </div>
         </div>
 
-        <div className={styles.signature} aria-label="ED BONILLA">
-          <span className={styles.signatureTrack} aria-hidden="true">
+        <div className={styles.signature}>
+          <GlitchText
+            className={styles.signatureTrack}
+            speed={0.8}
+            enableShadows
+            enableOnHover
+          >
             ED BONILLA
-          </span>
+          </GlitchText>
         </div>
 
         <footer className={styles.footer}>
