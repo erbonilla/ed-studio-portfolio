@@ -10,7 +10,7 @@
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--button04-border);
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--button04-foreground);
   background: var(--button04-background);
   font: inherit;
@@ -137,22 +137,20 @@
   position: relative;
   display: grid;
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   place-items: center;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-  border-radius: 50%;
+  overflow: visible;
 }
 
 .button04[data-size="small"] .button04_icon-wrap {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 
 .button04[data-size="large"] .button04_icon-wrap {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
 }
 
 .button04_icon {
@@ -167,10 +165,11 @@
 }
 
 .button04_icon.is-arrow {
-  grid-template-columns: repeat(3, 3px);
+  grid-template-columns: repeat(6, 2px);
+  grid-template-rows: repeat(5, 2px);
   gap: 2px;
   opacity: 0;
-  transform: translate(-8px, 8px) rotate(-12deg);
+  transform: translate(-8px, 8px) rotate(-57deg);
 }
 
 .button04_dot {
@@ -185,16 +184,10 @@
 }
 
 .button04_icon.is-arrow .button04_dot {
-  width: 3px;
-  height: 3px;
+  width: 2px;
+  height: 2px;
   opacity: 0;
   transform: translate(-4px, 4px) scale(0.2);
-}
-
-.button04_icon.is-arrow .button04_dot:nth-child(1),
-.button04_icon.is-arrow .button04_dot:nth-child(4),
-.button04_icon.is-arrow .button04_dot:nth-child(8) {
-  visibility: hidden;
 }
 
 .button04:hover,
@@ -223,7 +216,7 @@
 .button04:hover .button04_icon.is-arrow,
 .button04:focus-visible .button04_icon.is-arrow {
   opacity: 1;
-  transform: translate(0) rotate(0);
+  transform: translate(0) rotate(-45deg);
 }
 
 .button04:hover .button04_icon.is-arrow .button04_dot,
@@ -276,5 +269,5 @@
 }
 
 .project-actions .button04 {
-  border-radius: 999px;
+  border-radius: 0;
 }

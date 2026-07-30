@@ -117,56 +117,6 @@
   max-width: 480px;
 }
 
-.emailButton {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-  padding: 0 22px 0 26px;
-  overflow: hidden;
-  border-radius: 999px;
-  color: var(--ink);
-  background: var(--brand);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-  isolation: isolate;
-}
-
-.emailButton::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: var(--white);
-  transform: translateX(-102%);
-  transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.emailButton:hover::before,
-.emailButton:focus-visible::before {
-  transform: translateX(0);
-}
-
-.buttonArrow {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid rgba(5, 5, 5, 0.34);
-  border-radius: 50%;
-  font-size: 20px;
-  transition: transform 360ms cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.emailButton:hover .buttonArrow,
-.emailButton:focus-visible .buttonArrow {
-  transform: rotate(45deg);
-}
-
 .utility {
   display: grid;
   grid-template-columns: 1.1fr 0.7fr 1fr;
@@ -338,12 +288,5 @@
 
   .footer p:last-child {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .emailButton::before,
-  .buttonArrow {
-    transition: none;
   }
 }

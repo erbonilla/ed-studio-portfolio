@@ -1555,7 +1555,7 @@ main {
   gap: 20px;
   padding: 0 16px;
   border: 1px solid #111516;
-  border-radius: 4px;
+  border-radius: 0;
   color: #111516;
   background: transparent;
   font-size: 11px;

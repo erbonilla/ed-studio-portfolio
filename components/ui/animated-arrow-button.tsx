@@ -9,7 +9,18 @@ const firstIconDots = [
   2, 0, 1, 0, 2,
 ] as const;
 
-const secondIconDots = [0, 2, 2, 1, 2, 0, 1, 1, 2] as const;
+const secondIconDots = [
+  { column: 4, row: 1, index: 2 },
+  { column: 5, row: 2, index: 1 },
+  { column: 1, row: 3, index: 2 },
+  { column: 2, row: 3, index: 1 },
+  { column: 3, row: 3, index: 0 },
+  { column: 4, row: 3, index: 1 },
+  { column: 5, row: 3, index: 0 },
+  { column: 6, row: 3, index: 1 },
+  { column: 5, row: 4, index: 1 },
+  { column: 4, row: 5, index: 2 },
+] as const;
 
 type Button04Variant =
   | "brand"
@@ -85,10 +96,16 @@ function ButtonContent({
             style={{ "--index-parent": 1 } as React.CSSProperties}
             className="button04_icon is-arrow"
           >
-            {secondIconDots.map((index, dotIndex) => (
+            {secondIconDots.map(({ column, row, index }, dotIndex) => (
               <span
                 key={`second-dot-${dotIndex}`}
-                style={{ "--index": index } as React.CSSProperties}
+                style={
+                  {
+                    "--index": index,
+                    gridColumn: column,
+                    gridRow: row,
+                  } as React.CSSProperties
+                }
                 className="button04_dot"
               />
             ))}
