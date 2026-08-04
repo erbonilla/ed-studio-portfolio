@@ -82,14 +82,33 @@ export function ContactSection() {
               Product challenges, design systems, accessibility, or a role where thoughtful
               design can create real momentum.
             </p>
-            <Button04
-              className={styles.contactButton}
-              href={`mailto:${EMAIL}`}
-              text="Start a conversation"
-              variant="brand"
-              size="large"
-              fullWidth
-            />
+            <div className={styles.contactActions}>
+              <Button04
+                href={`mailto:${EMAIL}`}
+                text="Start a conversation"
+                compactText="Let's talk"
+                variant="brand"
+                size="large"
+                fullWidth
+              />
+              <Button04
+                href="/assets/resume/edgar-bonilla-resume-en.pdf"
+                text="Download résumé — EN"
+                compactText="Résumé — EN"
+                variant="outline-light"
+                size="large"
+                fullWidth
+                download="Edgar-Bonilla-Resume-EN.pdf"
+                aria-label="Download Edgar Bonilla's résumé in English as a PDF"
+              />
+              <a
+                className={styles.resumeSpanishLink}
+                href="/assets/resume/edgar-bonilla-resume-es.pdf"
+                download="Edgar-Bonilla-Resume-ES.pdf"
+              >
+                Descargar CV en español <span aria-hidden="true">↓</span>
+              </a>
+            </div>
           </div>
         </div>
 
