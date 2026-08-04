@@ -9,6 +9,33 @@ import styles from "./ContactSection.module.css";
 
 const EMAIL = "erbonilla@outlook.com";
 
+const SOCIAL_LINKS = [
+  {
+    label: "Instagram — @coacherbonilla",
+    href: "https://www.instagram.com/coacherbonilla/",
+    platform: "instagram",
+    glyph: "",
+  },
+  {
+    label: "LinkedIn — Edgar Bonilla G.",
+    href: "https://www.linkedin.com/in/edgarbonillag/",
+    platform: "linkedin",
+    glyph: "in",
+  },
+  {
+    label: "Facebook — Oxígeno Zarcero",
+    href: "https://www.facebook.com/oxygenozar",
+    platform: "facebook",
+    glyph: "f",
+  },
+  {
+    label: "X — @erbonilla",
+    href: "https://x.com/erbonilla",
+    platform: "x",
+    glyph: "X",
+  },
+] as const;
+
 export function ContactSection() {
   const gsapModules = useGsapClient();
   const sectionRef = useRef<HTMLElement>(null);
@@ -119,9 +146,27 @@ export function ContactSection() {
           </div>
           <div>
             <span className={styles.utilityLabel}>Elsewhere</span>
-            <a href="https://github.com/erbonilla" target="_blank" rel="noreferrer">
-              GitHub ↗
-            </a>
+            <div className={styles.socialLinks} aria-label="Social media profiles">
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.platform}
+                  className={styles.socialLink}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={social.label}
+                  title={social.label}
+                >
+                  <span
+                    className={styles.socialIcon}
+                    data-platform={social.platform}
+                    aria-hidden="true"
+                  >
+                    {social.glyph}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
           <div>
             <span className={styles.utilityLabel}>Focus</span>

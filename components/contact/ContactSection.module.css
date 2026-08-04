@@ -185,6 +185,98 @@
   opacity: 0.62;
 }
 
+.socialLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.socialLink {
+  display: grid;
+  width: 40px !important;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(255, 79, 24, 0.5);
+  border-radius: 50%;
+  color: var(--brand);
+  background: transparent;
+  text-decoration: none;
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    transform 280ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.socialLink:hover,
+.socialLink:focus-visible {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+  transform: translateY(-3px);
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.socialIcon {
+  display: grid;
+  min-width: 16px;
+  min-height: 16px;
+  place-items: center;
+  font-family: var(--font-inter), Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-transform: none;
+}
+
+.socialIcon[data-platform="linkedin"] {
+  padding-top: 1px;
+  font-size: 14px;
+}
+
+.socialIcon[data-platform="facebook"] {
+  padding-top: 3px;
+  font-size: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.socialIcon[data-platform="x"] {
+  font-size: 13px;
+  letter-spacing: -0.12em;
+}
+
+.socialIcon[data-platform="instagram"] {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border: 1.7px solid currentColor;
+  border-radius: 5px;
+}
+
+.socialIcon[data-platform="instagram"]::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.socialIcon[data-platform="instagram"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .signature {
   display: grid;
   width: 100%;
@@ -302,6 +394,11 @@
     border-bottom: 0;
   }
 
+  .socialLink {
+    width: 44px !important;
+    height: 44px;
+  }
+
   .signature {
     min-height: 150px;
     padding-block: 34px 30px;
@@ -321,5 +418,16 @@
 
   .footer p:last-child {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socialLink {
+    transition: none;
+  }
+
+  .socialLink:hover,
+  .socialLink:focus-visible {
+    transform: none;
   }
 }
