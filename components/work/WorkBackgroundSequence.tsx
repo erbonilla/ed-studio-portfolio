@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import styles from "./WorkBackgroundSequence.module.css";
 
 const FRAME_COUNT = 240;
@@ -14,10 +13,13 @@ function frameSource(index: number) {
 }
 
 export function WorkBackgroundSequence() {
+  const gsapModules = useGsapClient();
   const layerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (!gsapModules) return;
+    const { gsap, ScrollTrigger } = gsapModules;
     const layer = layerRef.current;
     const canvas = canvasRef.current;
     const section = layer?.closest<HTMLElement>(".work-section");
@@ -247,7 +249,7 @@ export function WorkBackgroundSequence() {
 
     requestFrame(targetFrame);
 
-    let scrollSequence: ScrollTrigger | undefined;
+    let scrollSequence: ReturnType<typeof ScrollTrigger.create> | undefined;
     if (!reducedMotion) {
       scrollSequence = ScrollTrigger.create({
         trigger: section,
@@ -280,7 +282,7 @@ export function WorkBackgroundSequence() {
       delete section.dataset.workBackgroundReady;
       section.style.removeProperty("--work-background-progress");
     };
-  }, []);
+  }, [gsapModules]);
 
   return (
     <div ref={layerRef} className={styles.layer} aria-hidden="true">

@@ -7,18 +7,15 @@ import {
   type CSSProperties,
   type ElementType,
 } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText as GSAPSplitText } from "gsap/SplitText";
-import { useGSAP } from "@gsap/react";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import "./SplitText.css";
-
-gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
 type SplitTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span";
 type SplitType = "chars" | "words" | "lines" | "words, chars";
+type GsapClientModules = NonNullable<ReturnType<typeof useGsapClient>>;
+type GsapSplitTextInstance = InstanceType<GsapClientModules["SplitText"]>;
 type SplitElement = HTMLElement & {
-  _rbsplitInstance?: GSAPSplitText | null;
+  _rbsplitInstance?: GsapSplitTextInstance | null;
 };
 
 export interface SplitTextProps {
@@ -29,8 +26,8 @@ export interface SplitTextProps {
   duration?: number;
   ease?: string;
   splitType?: SplitType;
-  from?: gsap.TweenVars;
-  to?: gsap.TweenVars;
+  from?: GSAPTweenVars;
+  to?: GSAPTweenVars;
   threshold?: number;
   rootMargin?: string;
   textAlign?: CSSProperties["textAlign"];
@@ -54,9 +51,12 @@ export default function SplitText({
   tag = "p",
   onLetterAnimationComplete,
 }: SplitTextProps) {
+  const gsapModules = useGsapClient();
   const ref = useRef<SplitElement | null>(null);
   const animationCompletedRef = useRef(false);
   const onCompleteRef = useRef(onLetterAnimationComplete);
+  const fromRef = useRef(from);
+  const toRef = useRef(to);
   const [fontsLoaded, setFontsLoaded] = useState(() => {
     if (typeof document === "undefined") return false;
     if (!("fonts" in document)) return true;
@@ -64,6 +64,11 @@ export default function SplitText({
   });
   const fromKey = JSON.stringify(from);
   const toKey = JSON.stringify(to);
+
+  useEffect(() => {
+    fromRef.current = from;
+    toRef.current = to;
+  }, [from, to]);
 
   useEffect(() => {
     onCompleteRef.current = onLetterAnimationComplete;
@@ -86,8 +91,11 @@ export default function SplitText({
     };
   }, []);
 
-  useGSAP(
+  useEffect(
     () => {
+      if (!gsapModules) return;
+      const { gsap, ScrollTrigger, SplitText: GSAPSplitText } = gsapModules;
+      gsap.registerPlugin(ScrollTrigger, GSAPSplitText);
       if (!ref.current || !text || !fontsLoaded || animationCompletedRef.current) return;
       const el = ref.current;
 
@@ -119,7 +127,7 @@ export default function SplitText({
       const start = `top ${startPct}%${sign}`;
       let targets: Element[] = [];
 
-      const assignTargets = (instance: GSAPSplitText) => {
+      const assignTargets = (instance: GsapSplitTextInstance) => {
         if (splitType.includes("chars") && instance.chars.length) targets = instance.chars;
         if (!targets.length && splitType.includes("words") && instance.words.length) {
           targets = instance.words;
@@ -148,9 +156,9 @@ export default function SplitText({
           assignTargets(instance);
           gsap.fromTo(
             targets,
-            { ...from },
+            { ...fromRef.current },
             {
-              ...to,
+              ...toRef.current,
               duration,
               ease,
               stagger: delay / 1000,
@@ -186,21 +194,19 @@ export default function SplitText({
         el._rbsplitInstance = null;
       };
     },
-    {
-      dependencies: [
-        text,
-        delay,
-        duration,
-        ease,
-        splitType,
-        fromKey,
-        toKey,
-        threshold,
-        rootMargin,
-        fontsLoaded,
-      ],
-      scope: ref,
-    },
+    [
+      gsapModules,
+      text,
+      delay,
+      duration,
+      ease,
+      splitType,
+      fromKey,
+      toKey,
+      threshold,
+      rootMargin,
+      fontsLoaded,
+    ],
   );
 
   const style: CSSProperties = {

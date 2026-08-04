@@ -8,17 +8,14 @@ import {
   type CSSProperties,
   type ElementType,
 } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText as GSAPSplitText } from "gsap/SplitText";
-import { useGSAP } from "@gsap/react";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import "./Shuffle.css";
-
-gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
 type ShuffleDirection = "left" | "right" | "up" | "down";
 type ShuffleAnimationMode = "evenodd" | "random";
 type ShuffleTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span";
+type GsapClientModules = NonNullable<ReturnType<typeof useGsapClient>>;
+type GsapSplitTextInstance = InstanceType<GsapClientModules["SplitText"]>;
 
 export interface ShuffleProps {
   text: string;
@@ -27,7 +24,7 @@ export interface ShuffleProps {
   shuffleDirection?: ShuffleDirection;
   duration?: number;
   maxDelay?: number;
-  ease?: gsap.TweenVars["ease"];
+  ease?: GSAPTweenVars["ease"];
   threshold?: number;
   rootMargin?: string;
   tag?: ShuffleTag;
@@ -71,6 +68,7 @@ export function Shuffle({
   respectReducedMotion = true,
   triggerOnHover = true,
 }: ShuffleProps) {
+  const gsapModules = useGsapClient();
   const ref = useRef<HTMLElement | null>(null);
   const [fontsLoaded, setFontsLoaded] = useState(() => {
     if (typeof document === "undefined") return false;
@@ -79,9 +77,9 @@ export function Shuffle({
   });
   const [ready, setReady] = useState(false);
 
-  const splitRef = useRef<GSAPSplitText | null>(null);
+  const splitRef = useRef<GsapSplitTextInstance | null>(null);
   const wrappersRef = useRef<HTMLSpanElement[]>([]);
-  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const tlRef = useRef<GSAPTimeline | null>(null);
   const playingRef = useRef(false);
   const hoverHandlerRef = useRef<(() => void) | null>(null);
 
@@ -108,8 +106,11 @@ export function Shuffle({
     return `top ${startPct}%${sign}`;
   }, [threshold, rootMargin]);
 
-  useGSAP(
+  useEffect(
     () => {
+      if (!gsapModules) return;
+      const { gsap, ScrollTrigger, SplitText: GSAPSplitText } = gsapModules;
+      gsap.registerPlugin(ScrollTrigger, GSAPSplitText);
       const el = ref.current;
       if (!el || !text || !fontsLoaded) return;
       if (
@@ -118,9 +119,11 @@ export function Shuffle({
         window.matchMedia &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ) {
-        setReady(true);
-        onShuffleComplete?.();
-        return;
+        const readyFrame = window.requestAnimationFrame(() => {
+          setReady(true);
+          onShuffleComplete?.();
+        });
+        return () => window.cancelAnimationFrame(readyFrame);
       }
 
       const start = scrollTriggerStart;
@@ -338,7 +341,7 @@ export function Shuffle({
         });
 
         const addTween = (targets: HTMLElement[], at: number) => {
-          const vars: gsap.TweenVars = {
+          const vars: GSAPTweenVars = {
             duration,
             ease,
             force3D: true,
@@ -369,7 +372,7 @@ export function Shuffle({
         } else {
           strips.forEach((strip) => {
             const d = Math.random() * maxDelay;
-            const vars: gsap.TweenVars = { duration, ease, force3D: true };
+            const vars: GSAPTweenVars = { duration, ease, force3D: true };
             if (isVertical) {
               vars.y = parseFloat(strip.getAttribute("data-final-y") || "0");
             } else {
@@ -420,30 +423,28 @@ export function Shuffle({
         setReady(false);
       };
     },
-    {
-      dependencies: [
-        text,
-        duration,
-        maxDelay,
-        ease,
-        scrollTriggerStart,
-        fontsLoaded,
-        shuffleDirection,
-        shuffleTimes,
-        animationMode,
-        loop,
-        loopDelay,
-        stagger,
-        scrambleCharset,
-        colorFrom,
-        colorTo,
-        triggerOnce,
-        respectReducedMotion,
-        triggerOnHover,
-        onShuffleComplete,
-      ],
-      scope: ref,
-    },
+    [
+      gsapModules,
+      text,
+      duration,
+      maxDelay,
+      ease,
+      scrollTriggerStart,
+      fontsLoaded,
+      shuffleDirection,
+      shuffleTimes,
+      animationMode,
+      loop,
+      loopDelay,
+      stagger,
+      scrambleCharset,
+      colorFrom,
+      colorTo,
+      triggerOnce,
+      respectReducedMotion,
+      triggerOnHover,
+      onShuffleComplete,
+    ],
   );
 
   const commonStyle = useMemo<CSSProperties>(() => ({ textAlign, ...style }), [textAlign, style]);

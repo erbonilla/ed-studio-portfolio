@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import Shuffle from "@/components/effects/Shuffle";
 import SplitText from "@/components/effects/SplitText";
 import { Button04 } from "@/components/ui/animated-arrow-button";
@@ -11,9 +10,12 @@ import styles from "./ContactSection.module.css";
 const EMAIL = "erbonilla@outlook.com";
 
 export function ContactSection() {
+  const gsapModules = useGsapClient();
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (!gsapModules) return;
+    const { gsap, ScrollTrigger } = gsapModules;
     const section = sectionRef.current;
     if (!section) return;
 
@@ -39,7 +41,7 @@ export function ContactSection() {
     }, section);
 
     return () => context.revert();
-  }, []);
+  }, [gsapModules]);
 
   return (
     <section ref={sectionRef} id="contact" className={styles.section} aria-labelledby="contact-title">

@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { portfolioContent } from "@/lib/portfolio-content";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import { DecryptedText, type DecryptedTextHandle } from "@/components/effects/DecryptedText";
 
 const ABOUT_BACKGROUND_FRAME_COUNT = 80;
@@ -24,6 +23,7 @@ type RevealState = {
 };
 
 export function AboutSection() {
+  const gsapModules = useGsapClient();
   const sectionRef = useRef<HTMLElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +40,8 @@ export function AboutSection() {
   const { about, expertise } = portfolioContent;
 
   useEffect(() => {
+    if (!gsapModules) return;
+    const { gsap, ScrollTrigger } = gsapModules;
     const section = sectionRef.current;
     const portrait = portraitRef.current;
     const canvas = canvasRef.current;
@@ -791,7 +793,7 @@ export function AboutSection() {
       portrait.removeEventListener("pointerup", onPointerUp);
       portrait.removeEventListener("pointercancel", onPointerUp);
     };
-  }, []);
+  }, [gsapModules]);
 
   return (
     <section ref={sectionRef} id="about" className="about-section" aria-labelledby="about-title">

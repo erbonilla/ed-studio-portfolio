@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 type NavigationId = "home" | "about" | "work" | "contact";
@@ -49,6 +49,7 @@ const navigationItems: NavigationItem[] = [
 const NAVIGATION_EVENT = "portfolio:navigate";
 
 export function PortfolioNavigation() {
+  const gsapModules = useGsapClient();
   const overlayRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -95,6 +96,8 @@ export function PortfolioNavigation() {
   }, []);
 
   useEffect(() => {
+    const gsap = gsapModules?.gsap;
+    if (!gsap) return;
     const overlay = overlayRef.current;
     if (!overlay) return;
 
@@ -202,7 +205,7 @@ export function PortfolioNavigation() {
     return () => {
       timeline.kill();
     };
-  }, [isOpen]);
+  }, [gsapModules, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

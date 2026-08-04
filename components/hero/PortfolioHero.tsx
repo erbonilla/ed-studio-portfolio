@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, type MouseEvent } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { portfolioContent } from "@/lib/portfolio-content";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 const FRAME_COUNT = 195;
@@ -15,6 +14,7 @@ const framePath = (index: number) =>
   `${FRAME_ROOT}/frame-${String(index + 1).padStart(3, "0")}.jpg`;
 
 export function PortfolioHero() {
+  const gsapModules = useGsapClient();
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const frameLayerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +34,8 @@ export function PortfolioHero() {
   };
 
   useEffect(() => {
+    if (!gsapModules) return;
+    const { gsap, ScrollTrigger } = gsapModules;
     const section = sectionRef.current;
     const stage = stageRef.current;
     const layer = frameLayerRef.current;
@@ -267,7 +269,7 @@ export function PortfolioHero() {
       stage.removeEventListener("pointermove", onPointerMove);
       stage.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, []);
+  }, [gsapModules]);
 
   useEffect(() => {
     const canvas = threeCanvasRef.current;

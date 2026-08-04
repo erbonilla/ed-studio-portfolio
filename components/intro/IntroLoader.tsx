@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
+import { useGsapClient } from "@/lib/use-gsap-client";
 
 const HERO_READY_EVENT = "portfolio:hero-ready";
 const MINIMUM_HOLD_MS = 1350;
 const FAILSAFE_MS = 5000;
 
 export function IntroLoader() {
+  const gsapModules = useGsapClient();
   const rootRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    const gsap = gsapModules?.gsap;
+    if (!gsap) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -26,7 +29,7 @@ export function IntroLoader() {
     let heroReady = page.dataset.heroReady === "true";
     let minimumElapsed = false;
     let isOpening = false;
-    let exitTimeline: gsap.core.Timeline | undefined;
+    let exitTimeline: ReturnType<typeof gsap.timeline> | undefined;
 
     page.classList.add("is-loading");
 
@@ -130,7 +133,7 @@ export function IntroLoader() {
       if (heroStage) gsap.set(heroStage, { clearProps: "scale" });
       gsap.set(heroInterface, { clearProps: "opacity,visibility,transform" });
     };
-  }, []);
+  }, [gsapModules]);
 
   if (!visible) return null;
 

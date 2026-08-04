@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGsapClient } from "@/lib/use-gsap-client";
 import { Shuffle } from "@/components/effects/Shuffle";
 import { LogoLoop } from "@/components/effects/LogoLoop";
 import { Button04 } from "@/components/ui/animated-arrow-button";
@@ -63,9 +62,12 @@ const projects = [
 ] as const;
 
 export function WorkSection() {
+  const gsapModules = useGsapClient();
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (!gsapModules) return;
+    const { gsap, ScrollTrigger } = gsapModules;
     const section = sectionRef.current;
     if (!section) return;
 
@@ -200,7 +202,7 @@ export function WorkSection() {
       cleanups.forEach((cleanup) => cleanup());
       animationContext.revert();
     };
-  }, []);
+  }, [gsapModules]);
 
   return (
     <section ref={sectionRef} id="work" className="work-section" aria-labelledby="work-title">
