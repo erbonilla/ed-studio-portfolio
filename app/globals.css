@@ -570,7 +570,91 @@ main {
 .menu-meta-socials {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 18px;
+  gap: 8px;
+}
+
+.menu-social-link {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(255, 79, 24, 0.72);
+  border-radius: 50%;
+  color: var(--brand);
+  text-decoration: none;
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    transform 280ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.menu-social-link:hover,
+.menu-social-link:focus-visible {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+  transform: translateY(-3px);
+}
+
+.menu-social-link:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.menu-social-icon {
+  display: grid;
+  min-width: 16px;
+  min-height: 16px;
+  place-items: center;
+  font-family: var(--font-inter), Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.menu-social-icon[data-platform="linkedin"] {
+  padding-top: 1px;
+  font-size: 14px;
+}
+
+.menu-social-icon[data-platform="facebook"] {
+  padding-top: 3px;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+.menu-social-icon[data-platform="x"] {
+  font-size: 13px;
+  letter-spacing: -0.12em;
+}
+
+.menu-social-icon[data-platform="instagram"] {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border: 1.7px solid currentColor;
+  border-radius: 5px;
+}
+
+.menu-social-icon[data-platform="instagram"]::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.menu-social-icon[data-platform="instagram"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .menu-meta-signals {

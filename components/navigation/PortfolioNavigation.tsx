@@ -46,6 +46,33 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
+const socialLinks = [
+  {
+    label: "Instagram — @coacherbonilla",
+    href: "https://www.instagram.com/coacherbonilla/",
+    platform: "instagram",
+    glyph: "",
+  },
+  {
+    label: "LinkedIn — Edgar Bonilla G.",
+    href: "https://www.linkedin.com/in/edgarbonillag/",
+    platform: "linkedin",
+    glyph: "in",
+  },
+  {
+    label: "Facebook — Oxígeno Zarcero",
+    href: "https://www.facebook.com/oxygenozar",
+    platform: "facebook",
+    glyph: "f",
+  },
+  {
+    label: "X — @erbonilla",
+    href: "https://x.com/erbonilla",
+    platform: "x",
+    glyph: "X",
+  },
+] as const;
+
 const NAVIGATION_EVENT = "portfolio:navigate";
 
 export function PortfolioNavigation() {
@@ -362,11 +389,27 @@ export function PortfolioNavigation() {
             </div>
             <div>
               <p className="menu-meta-label">ELSEWHERE</p>
-              <p className="menu-meta-socials">
-                <span>LinkedIn</span>
-                <span>GitHub</span>
-                <span>Instagram</span>
-              </p>
+              <div className="menu-meta-socials" aria-label="Social media profiles">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.platform}
+                    className="menu-social-link"
+                    href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={social.label}
+                    title={social.label}
+                  >
+                    <span
+                      className="menu-social-icon"
+                      data-platform={social.platform}
+                      aria-hidden="true"
+                    >
+                      {social.glyph}
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
             <div>
               <p className="menu-meta-label">LOCATION</p>
