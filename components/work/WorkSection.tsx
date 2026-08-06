@@ -291,7 +291,7 @@ export function WorkSection() {
               </div>
               <div className="project-media-shade" aria-hidden="true" />
               <div className="project-media-label">
-                <span>Context study</span>
+                <span>AI-assisted portfolio imagery</span>
                 <span>Motion / silent</span>
               </div>
               <div className="project-detail-image">
