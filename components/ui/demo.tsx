@@ -1,7 +1,7 @@
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 export default function DemoOne() {
-  return <Button04 href="#" text="Nothing-Plop" />;
+  return <Button04 href="#" text="Read case study" />;
 }
 
 export function Button04Variations() {

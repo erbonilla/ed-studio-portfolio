@@ -25,10 +25,14 @@ function MarqueeGroup({ duplicate = false }: { duplicate?: boolean }) {
 
 export function WorkMarquee() {
   return (
-    <section
-      className={styles.marquee}
-      aria-label="Selected work case studies: Atlan adapts when plans change. Osteóplus makes the next safe action clear."
-    >
+    /*
+     * A named <section> becomes a landmark, so this band was listing itself in
+     * the landmark menu under a whole two-sentence name. Everything it says —
+     * both project names and both taglines — is stated properly in the Work
+     * chapter immediately below, so it leaves the accessibility tree entirely
+     * and stays what it looks like: a kinetic seam between two registers.
+     */
+    <section className={styles.marquee} data-nav-theme="light" aria-hidden="true">
       <div className={styles.meta} aria-hidden="true">
         <span>Next / Selected work</span>
         <span>02 case studies</span>

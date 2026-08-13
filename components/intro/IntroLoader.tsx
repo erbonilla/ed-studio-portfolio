@@ -5,12 +5,59 @@ import { useGsapClient } from "@/lib/use-gsap-client";
 
 const HERO_READY_EVENT = "portfolio:hero-ready";
 const MINIMUM_HOLD_MS = 1350;
+/* A visitor who has already watched the aperture open this session gets the
+   fact of the brand, not the performance of it a second time. */
+const RETURNING_HOLD_MS = 260;
 const FAILSAFE_MS = 5000;
+/* Beyond this the sequence is not late, it is broken. Runs whether or not the
+   motion chunk ever arrived. */
+const HARD_DISMISS_MS = 6000;
+const SEEN_KEY = "portfolio:intro-seen";
+const DEEP_LINK_TARGETS = new Set(["about", "work", "contact"]);
+
+/* Someone arriving on a shared #work or #contact link asked for a section, not
+   for the opening titles. Reading this once at module scope keeps it stable
+   across the render that follows hydration. */
+const arrivedOnDeepLink = () => {
+  if (typeof window === "undefined") return false;
+  return DEEP_LINK_TARGETS.has(window.location.hash.replace("#", ""));
+};
+
+const hasSeenIntro = () => {
+  try {
+    return window.sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    // Private mode or a blocked storage partition: treat as a first visit.
+    return false;
+  }
+};
+
+const markIntroSeen = () => {
+  try {
+    window.sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    // Nothing to recover from — the intro simply plays in full next time.
+  }
+};
 
 export function IntroLoader() {
   const gsapModules = useGsapClient();
   const rootRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
+
+  /*
+   * Runs independently of the motion stack. If the GSAP chunk never resolves,
+   * the effect below never mounts its timers and this fixed, full-viewport
+   * orange panel would sit over the entire portfolio forever. Its CSS twin in
+   * globals.css covers the case where React itself never hydrates.
+   */
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      document.documentElement.classList.remove("is-loading");
+      setVisible(false);
+    }, HARD_DISMISS_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const gsap = gsapModules?.gsap;
@@ -19,6 +66,12 @@ export function IntroLoader() {
     if (!root) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // A deep link and a repeat visit both want the page, not the overture. The
+    // deep link skips it outright; the repeat visit keeps a short beat so the
+    // hand-off into the hero is not a jump cut.
+    const deepLink = arrivedOnDeepLink();
+    const returning = hasSeenIntro();
+    const abbreviated = reducedMotion || deepLink || returning;
     const page = document.documentElement;
     const heroStage = document.querySelector<HTMLElement>(".hero-stage");
     const heroInterface = Array.from(
@@ -33,7 +86,10 @@ export function IntroLoader() {
 
     page.classList.add("is-loading");
 
-    if (!reducedMotion) {
+    // Only the full overture dims and scales the hero behind the panels. An
+    // abbreviated exit does not run the timeline that restores them, so it must
+    // not stage them either.
+    if (!abbreviated) {
       if (heroStage) gsap.set(heroStage, { scale: 1.035 });
       gsap.set(heroInterface, { autoAlpha: 0.45, y: 12 });
     }
@@ -41,14 +97,26 @@ export function IntroLoader() {
     const finish = () => {
       page.classList.remove("is-loading");
       root.setAttribute("aria-hidden", "true");
+      markIntroSeen();
       setVisible(false);
+
+      // The browser's own hash jump happened while the document was still
+      // locked, so it landed nowhere. Re-issue it now that the page can move.
+      if (deepLink) {
+        const id = window.location.hash.slice(1);
+        // Next frame, so the pinned hero has been measured and the offsets the
+        // jump lands on are the final ones.
+        window.requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({ block: "start" });
+        });
+      }
     };
 
     const open = () => {
       if (isOpening || !minimumElapsed || !heroReady) return;
       isOpening = true;
 
-      if (reducedMotion) {
+      if (abbreviated) {
         exitTimeline = gsap.timeline({ onComplete: finish }).to(root, {
           autoAlpha: 0,
           duration: 0.24,
@@ -96,26 +164,31 @@ export function IntroLoader() {
         .fromTo(
           ".intro-wordmark",
           { autoAlpha: 0, scale: 0.94 },
-          { autoAlpha: 1, scale: 1, duration: reducedMotion ? 0.01 : 0.58 },
+          { autoAlpha: 1, scale: 1, duration: abbreviated ? 0.01 : 0.58 },
         )
         .fromTo(
           ".intro-phrase",
           { autoAlpha: 0, y: 10 },
-          { autoAlpha: 1, y: 0, duration: reducedMotion ? 0.01 : 0.5 },
-          reducedMotion ? 0 : 0.16,
+          { autoAlpha: 1, y: 0, duration: abbreviated ? 0.01 : 0.5 },
+          abbreviated ? 0 : 0.16,
         )
         .fromTo(
           ".intro-seam",
           { scaleX: 0 },
-          { scaleX: 1, duration: reducedMotion ? 0.01 : 0.62 },
-          reducedMotion ? 0 : 0.12,
+          { scaleX: 1, duration: abbreviated ? 0.01 : 0.62 },
+          abbreviated ? 0 : 0.12,
         );
     }, root);
 
-    const minimumTimer = window.setTimeout(() => {
-      minimumElapsed = true;
-      open();
-    }, reducedMotion ? 120 : MINIMUM_HOLD_MS);
+    const minimumTimer = window.setTimeout(
+      () => {
+        minimumElapsed = true;
+        open();
+      },
+      // Reduced motion and a deep link both want out immediately; a returning
+      // visitor gets a beat, not the full 1.35s hold.
+      reducedMotion || deepLink ? 120 : returning ? RETURNING_HOLD_MS : MINIMUM_HOLD_MS,
+    );
 
     const failsafeTimer = window.setTimeout(() => {
       heroReady = true;
@@ -138,7 +211,10 @@ export function IntroLoader() {
   if (!visible) return null;
 
   return (
-    <div ref={rootRef} className="intro-loader" role="status" aria-label="Loading portfolio">
+    /* The live region is the one sentence below, not this whole subtree. With
+       role="status" on the container, every panel and corner label was part of
+       the announcement and the wordmark's mask element read as noise. */
+    <div ref={rootRef} className="intro-loader">
       <div className="intro-panel intro-panel-top" aria-hidden="true" />
       <div className="intro-panel intro-panel-bottom" aria-hidden="true" />
 
@@ -151,13 +227,20 @@ export function IntroLoader() {
 
       <div className="intro-identity">
         <span className="intro-wordmark" aria-hidden="true" />
-        <p className="intro-phrase">Designing clarity into motion.</p>
+        {/* Word for word the hero h1 that follows. Announcing it here made
+            screen-reader visitors hear the headline twice before the page
+            existed. */}
+        <p className="intro-phrase" aria-hidden="true">
+          Designing clarity into motion.
+        </p>
       </div>
 
       <div className="intro-seam" aria-hidden="true">
         <span className="intro-seam-fill" />
       </div>
-      <span className="sr-only">Preparing Edgar Bonilla&apos;s portfolio.</span>
+      <span className="sr-only" role="status">
+        Loading Edgar Bonilla&apos;s portfolio.
+      </span>
     </div>
   );
 }

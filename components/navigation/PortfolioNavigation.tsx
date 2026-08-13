@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useGsapClient } from "@/lib/use-gsap-client";
+import { scrollToSection } from "@/lib/scroll-controller";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 type NavigationId = "home" | "about" | "work" | "contact";
@@ -34,13 +35,15 @@ const navigationItems: NavigationItem[] = [
     id: "work",
     label: "Work",
     descriptor: "Selected case studies",
-    frame: "/assets/work/atlan/swimmer.jpg",
+    frame: "/assets/work/atlan/swimmer.webp",
     available: true,
   },
   {
     id: "contact",
     label: "Contact",
-    descriptor: "Start a conversation",
+    // Describes what the section holds. It used to borrow the email button's
+    // label, so one phrase named both a destination and a different action.
+    descriptor: "Availability, résumé, email",
     frame: "/assets/hero/frames/frame-195.jpg",
     available: true,
   },
@@ -81,27 +84,96 @@ export function PortfolioNavigation() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [activeId, setActiveId] = useState<NavigationId>("home");
+  // `previewId` follows hover and focus inside the menu and only drives the
+  // preview thumbnail. `currentId` follows the actual scroll position and is
+  // the only thing allowed to set aria-current — hovering a link does not
+  // change which section the visitor is on.
+  const [previewId, setPreviewId] = useState<NavigationId>("home");
+  const [currentId, setCurrentId] = useState<NavigationId>("home");
+  const [navTheme, setNavTheme] = useState<"dark" | "light">("dark");
 
   const activeItem =
-    navigationItems.find((item) => item.id === activeId) ?? navigationItems[0];
+    navigationItems.find((item) => item.id === previewId) ?? navigationItems[0];
 
   const openMenu = (id: NavigationId = "home") => {
-    setActiveId(id);
+    setPreviewId(id);
     setIsOpen(true);
   };
 
   const visit = (id: NavigationId) => {
     const destination = document.getElementById(id);
-    setActiveId(id);
+    setPreviewId(id);
 
     if (!destination) return;
 
     setIsOpen(false);
     window.setTimeout(() => {
-      destination.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 360);
+      scrollToSection(destination);
+      // Write the hash so the section is linkable and browser-back works,
+      // without triggering a second native jump.
+      if (window.location.hash !== `#${id}`) {
+        window.history.pushState(null, "", `#${id}`);
+      }
+    }, isOpen ? 360 : 0);
   };
+
+  // The header sits over five chapters in two registers. Its gradient and
+  // hairline are tuned for near-black, so over the orange marquee, the orange
+  // About portrait, and the cream Work chapter the wordmark and CTA vanish.
+  // Any element marked data-nav-theme="light" flips the bar while it is under
+  // the header band.
+  useEffect(() => {
+    const marked = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-nav-theme='light']"),
+    );
+    if (marked.length === 0) return;
+
+    const header = document.querySelector<HTMLElement>(".hero-nav");
+
+    const resolve = () => {
+      // Sample at the vertical middle of the bar, so the swap happens as the
+      // chapter edge passes under it rather than before or after.
+      const band = (header?.getBoundingClientRect().height ?? 82) * 0.6;
+      const overLight = marked.some((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top <= band && rect.bottom >= band;
+      });
+      setNavTheme(overLight ? "light" : "dark");
+    };
+
+    resolve();
+    window.addEventListener("scroll", resolve, { passive: true });
+    window.addEventListener("resize", resolve);
+    return () => {
+      window.removeEventListener("scroll", resolve);
+      window.removeEventListener("resize", resolve);
+    };
+  }, []);
+
+  // Scroll position, not hover, decides which section is current.
+  useEffect(() => {
+    const sections = navigationItems
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => Boolean(element));
+    if (sections.length === 0) return;
+
+    const resolve = () => {
+      const marker = window.innerHeight * 0.35;
+      let next = sections[0];
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= marker) next = section;
+      }
+      setCurrentId(next.id as NavigationId);
+    };
+
+    resolve();
+    window.addEventListener("scroll", resolve, { passive: true });
+    window.addEventListener("resize", resolve);
+    return () => {
+      window.removeEventListener("scroll", resolve);
+      window.removeEventListener("resize", resolve);
+    };
+  }, []);
 
   useEffect(() => {
     const onNavigationRequest = (event: Event) => {
@@ -111,7 +183,10 @@ export function PortfolioNavigation() {
 
       const destination = document.getElementById(id);
       if (destination) {
-        destination.scrollIntoView({ behavior: "smooth", block: "start" });
+        scrollToSection(destination);
+        if (window.location.hash !== `#${id}`) {
+          window.history.pushState(null, "", `#${id}`);
+        }
         return;
       }
 
@@ -271,14 +346,31 @@ export function PortfolioNavigation() {
 
   return (
     <>
-      <header className="hero-nav site-navigation" aria-label="Primary navigation">
-        <button className="nav-brand-button" type="button" onClick={() => visit("home")}>
+      <a className="skip-link" href="#work">
+        Skip to selected work
+      </a>
+
+      <header
+        className="hero-nav site-navigation"
+        data-theme={navTheme}
+        aria-label="Primary navigation"
+      >
+        <button
+          className="nav-brand-button"
+          type="button"
+          onClick={() => visit("home")}
+          aria-label="Edgar Bonilla G. — back to top"
+        >
           <Image
             className="hero-wordmark"
-            src="/assets/brand/ed-studio-wordmark.svg"
+            src={
+              navTheme === "light"
+                ? "/assets/brand/ed-studio-wordmark-ink.svg"
+                : "/assets/brand/ed-studio-wordmark.svg"
+            }
             width="147"
             height="28"
-            alt="Ed Studio — home"
+            alt=""
             priority
             unoptimized
           />
@@ -290,7 +382,7 @@ export function PortfolioNavigation() {
           type="button"
           aria-expanded={isOpen}
           aria-controls="portfolio-menu"
-          onClick={() => openMenu(activeId)}
+          onClick={() => openMenu(currentId)}
         >
           <span>Menu</span>
           <span className="nav-menu-icon" aria-hidden="true">
@@ -299,13 +391,20 @@ export function PortfolioNavigation() {
           </span>
         </button>
 
+        {/* Goes to Contact. It used to open the menu, which meant the loudest
+            control on the page did not do what it said. Labelled distinctly so
+            it can never collide with the Contact section's own button. */}
         <Button04
           className="nav-collaboration-cta"
-          text="Let's work together"
-          compactText="Let's talk"
+          href="#contact"
+          text="Get in touch"
+          compactText="Contact"
           variant="brand"
           size="small"
-          onClick={() => openMenu("contact")}
+          onClick={(event) => {
+            event.preventDefault();
+            visit("contact");
+          }}
         />
       </header>
 
@@ -344,13 +443,17 @@ export function PortfolioNavigation() {
             </span>
           </button>
 
+          {/* Same words as the header control, because it is the same action:
+              go to Contact. "Let's work together" also read as a freelance
+              pitch, which is not what this page is for. "Start a conversation"
+              now belongs only to the button that actually opens an email. */}
           <Button04
             className="menu-collaboration-cta"
-            text="Let's work together"
-            compactText="Let's talk"
+            text="Get in touch"
+            compactText="Contact"
             variant="brand"
             size="small"
-            onClick={() => setActiveId("contact")}
+            onClick={() => visit("contact")}
           />
         </div>
 
@@ -362,10 +465,10 @@ export function PortfolioNavigation() {
                   <a
                     href={`#${item.id}`}
                     data-menu-link
-                    data-active={activeId === item.id}
-                    aria-current={activeId === item.id ? "page" : undefined}
-                    onPointerEnter={() => setActiveId(item.id)}
-                    onFocus={() => setActiveId(item.id)}
+                    data-active={previewId === item.id}
+                    aria-current={currentId === item.id ? "page" : undefined}
+                    onPointerEnter={() => setPreviewId(item.id)}
+                    onFocus={() => setPreviewId(item.id)}
                     onClick={(event) => {
                       event.preventDefault();
                       visit(item.id);
@@ -389,7 +492,7 @@ export function PortfolioNavigation() {
             </div>
             <div>
               <p className="menu-meta-label">ELSEWHERE</p>
-              <div className="menu-meta-socials" aria-label="Social media profiles">
+              <div className="menu-meta-socials" role="group" aria-label="Social profiles">
                 {socialLinks.map((social) => (
                   <a
                     key={social.platform}
@@ -397,7 +500,7 @@ export function PortfolioNavigation() {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={social.label}
+                    aria-label={`${social.label} (opens in a new tab)`}
                     title={social.label}
                   >
                     <span
@@ -421,9 +524,33 @@ export function PortfolioNavigation() {
                 <span aria-hidden="true" />
                 OPEN TO ROLES WORLDWIDE
               </p>
-              <p>
+              {/* This line used to announce that a résumé existed and then give
+                  no way to get it — the download sat at the bottom of Contact,
+                  past the whole scroll sequence. From the menu it is now one
+                  click from anywhere on the page. */}
+              <p className="menu-meta-resume">
                 <span aria-hidden="true" />
-                RÉSUMÉ — ENGLISH · ESPAÑOL
+                {/* The label and both links wrap as one group, so a narrow meta
+                    column breaks the line under the label rather than orphaning
+                    a single language against the marker. */}
+                <span className="menu-meta-resume-body">
+                  <span className="menu-meta-resume-label">Résumé</span>
+                  <a
+                    href="/assets/resume/edgar-bonilla-resume-en.pdf"
+                    download="Edgar-Bonilla-Resume-EN.pdf"
+                  >
+                    English<span className="sr-only"> (PDF)</span>
+                  </a>
+                  <i aria-hidden="true">·</i>
+                  <a
+                    href="/assets/resume/edgar-bonilla-resume-es.pdf"
+                    download="Edgar-Bonilla-Resume-ES.pdf"
+                    lang="es"
+                    hrefLang="es"
+                  >
+                    Español<span className="sr-only"> (PDF)</span>
+                  </a>
+                </span>
               </p>
             </div>
           </aside>

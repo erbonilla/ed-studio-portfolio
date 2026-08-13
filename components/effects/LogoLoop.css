@@ -104,8 +104,22 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  border-radius: 4px;
+  /* Zero-Radius Rule: if it can be clicked, its corners are square. */
+  border-radius: 0;
   transition: opacity 0.2s ease;
+}
+
+/*
+ * The logo itself is 34px tall, so the link was a 34x34 target — and it is a
+ * moving target, inside a marquee, which is the hardest kind to hit with a
+ * thumb. Padding grows the hit area to 44px without touching the mark: the
+ * negative margin keeps the visual rhythm and the 64px gap absorbs it.
+ */
+@media (pointer: coarse) {
+  .logoloop__link {
+    padding: 5px 8px;
+    margin: -5px -8px;
+  }
 }
 
 .logoloop__link:hover {

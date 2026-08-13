@@ -4,6 +4,7 @@ import { useEffect, useRef, type MouseEvent } from "react";
 import Lenis from "lenis";
 import { portfolioContent } from "@/lib/portfolio-content";
 import { useGsapClient } from "@/lib/use-gsap-client";
+import { setScrollController } from "@/lib/scroll-controller";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 const FRAME_COUNT = 195;
@@ -12,6 +13,27 @@ const HERO_READY_EVENT = "portfolio:hero-ready";
 
 const framePath = (index: number) =>
   `${FRAME_ROOT}/frame-${String(index + 1).padStart(3, "0")}.jpg`;
+
+/*
+ * 195 JPEGs and a WebGL scene are a fair ask on a laptop and an unfair one on a
+ * metered phone. Where the browser tells us the connection is constrained, the
+ * sequence drops to its anchor frames and the Three.js field never loads: the
+ * hero still resolves from obstruction to clarity, just in coarser steps.
+ */
+type NetworkInformation = { saveData?: boolean; effectiveType?: string };
+
+const isConstrainedConnection = () => {
+  const connection = (navigator as Navigator & { connection?: NetworkInformation })
+    .connection;
+  if (!connection) return false;
+  if (connection.saveData) return true;
+  return ["slow-2g", "2g", "3g"].includes(connection.effectiveType ?? "");
+};
+
+/* A frame that 404'd or decoded empty reports `complete: true`. Treating that
+   as loaded made the nearest-neighbour search settle on it and draw nothing. */
+const isDrawable = (image: HTMLImageElement | undefined): image is HTMLImageElement =>
+  Boolean(image?.complete && image.naturalWidth > 0);
 
 export function PortfolioHero() {
   const gsapModules = useGsapClient();
@@ -50,8 +72,13 @@ export function PortfolioHero() {
     if (!context) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const constrained = isConstrainedConnection();
+    // `drawFrame` is a hoisted declaration, so it does not inherit the null
+    // narrowing from the guard above; this alias carries it.
+    const frameLayer: HTMLDivElement = layer;
     const images: Array<HTMLImageElement | undefined> = new Array(FRAME_COUNT);
     let destroyed = false;
+    let hasPainted = false;
     let lastRendered = reducedMotion ? 96 : 0;
     let lenis: Lenis | undefined;
     let lenisTicker: ((time: number) => void) | undefined;
@@ -100,15 +127,15 @@ export function PortfolioHero() {
       const clamped = Math.max(0, Math.min(FRAME_COUNT - 1, Math.round(requestedIndex)));
       let resolved = clamped;
 
-      if (!images[resolved]?.complete) {
+      if (!isDrawable(images[resolved])) {
         for (let offset = 1; offset < FRAME_COUNT; offset += 1) {
           const before = clamped - offset;
           const after = clamped + offset;
-          if (before >= 0 && images[before]?.complete) {
+          if (before >= 0 && isDrawable(images[before])) {
             resolved = before;
             break;
           }
-          if (after < FRAME_COUNT && images[after]?.complete) {
+          if (after < FRAME_COUNT && isDrawable(images[after])) {
             resolved = after;
             break;
           }
@@ -116,9 +143,17 @@ export function PortfolioHero() {
       }
 
       const image = images[resolved];
-      if (!image?.complete || image.naturalWidth === 0) return;
+      if (!isDrawable(image)) return;
       lastRendered = resolved;
       drawImageCover(image);
+
+      // The 2D context is opaque, so until something is painted the canvas is a
+      // black rectangle sitting on top of the CSS still that is meant to carry
+      // the hero when the sequence cannot. Reveal it only once it has content.
+      if (!hasPainted) {
+        hasPainted = true;
+        frameLayer.dataset.painted = "true";
+      }
     }
 
     const loadFrame = (index: number) =>
@@ -149,12 +184,16 @@ export function PortfolioHero() {
         ]),
       );
       const anchorSet = new Set(anchorFrames);
-      const queue = [
-        ...anchorFrames,
-        ...Array.from({ length: FRAME_COUNT }, (_, index) => index).filter(
-          (index) => !anchorSet.has(index),
-        ),
-      ];
+      // On a constrained connection the anchors are the whole sequence: 35
+      // frames instead of 195, and the nearest-neighbour draw covers the rest.
+      const queue = constrained
+        ? anchorFrames
+        : [
+            ...anchorFrames,
+            ...Array.from({ length: FRAME_COUNT }, (_, index) => index).filter(
+              (index) => !anchorSet.has(index),
+            ),
+          ];
       let cursor = 0;
 
       const worker = async () => {
@@ -165,7 +204,7 @@ export function PortfolioHero() {
         }
       };
 
-      await Promise.all(Array.from({ length: 6 }, worker));
+      await Promise.all(Array.from({ length: constrained ? 2 : 6 }, worker));
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -192,7 +231,7 @@ export function PortfolioHero() {
 
     const animationContext = gsap.context(() => {
       if (reducedMotion) {
-        gsap.set("[data-beat='two'], [data-beat='three']", { autoAlpha: 0 });
+        gsap.set("[data-beat='two']", { autoAlpha: 0 });
         gsap.set(progressBar, { scaleX: 1 });
         return;
       }
@@ -228,20 +267,15 @@ export function PortfolioHero() {
         },
       });
 
+      // Two beats over a 200svh stage: the headline block holds most of the
+      // sequence, then hands off to the single closing statement.
       timeline
-        .to("[data-beat='one']", { autoAlpha: 0, yPercent: -14, duration: 0.75 }, 0.72)
+        .to("[data-beat='one']", { autoAlpha: 0, yPercent: -14, duration: 0.6 }, 0.85)
         .fromTo(
           "[data-beat='two']",
           { autoAlpha: 0, yPercent: 16 },
           { autoAlpha: 1, yPercent: 0, duration: 0.7 },
-          1.05,
-        )
-        .to("[data-beat='two']", { autoAlpha: 0, yPercent: -12, duration: 0.65 }, 2.08)
-        .fromTo(
-          "[data-beat='three']",
-          { autoAlpha: 0, yPercent: 14 },
-          { autoAlpha: 1, yPercent: 0, duration: 0.75 },
-          2.52,
+          1.2,
         );
 
       lenis = new Lenis({
@@ -253,6 +287,7 @@ export function PortfolioHero() {
       lenisTicker = (time: number) => lenis?.raf(time * 1000);
       gsap.ticker.add(lenisTicker);
       gsap.ticker.lagSmoothing(0);
+      setScrollController(lenis);
 
     }, section);
 
@@ -264,6 +299,7 @@ export function PortfolioHero() {
       animationContext.revert();
       if (pointerParallax) gsap.ticker.remove(pointerParallax);
       if (lenisTicker) gsap.ticker.remove(lenisTicker);
+      setScrollController(null);
       lenis?.destroy();
       window.removeEventListener("resize", resizeCanvas);
       stage.removeEventListener("pointermove", onPointerMove);
@@ -277,21 +313,40 @@ export function PortfolioHero() {
     if (!canvas || !stage) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) return;
+    // The focus field is atmosphere layered over the frame sequence. It is the
+    // first thing to go when motion is unwanted or bytes are expensive.
+    if (reducedMotion || isConstrainedConnection()) return;
 
     let cancelled = false;
     let disposeScene = () => undefined;
 
     void (async () => {
-      const THREE = await import("three");
+      let THREE: typeof import("three");
+      try {
+        THREE = await import("three");
+      } catch (error) {
+        // Chunk blocked or unavailable: the hero is complete without it.
+        console.warn("Hero focus field unavailable.", error);
+        return;
+      }
       if (cancelled) return;
 
-      const renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: true,
-        powerPreference: "high-performance",
-      });
+      // Software-blocked WebGL, an exhausted context pool, or a driver
+      // blocklist all throw here. Uncaught, that took down the whole route.
+      let renderer: InstanceType<typeof THREE.WebGLRenderer>;
+      try {
+        renderer = new THREE.WebGLRenderer({
+          canvas,
+          alpha: true,
+          antialias: true,
+          powerPreference: "high-performance",
+        });
+      } catch (error) {
+        console.warn("WebGL unavailable; hero renders without the focus field.", error);
+        canvas.style.display = "none";
+        return;
+      }
+
       renderer.setClearColor(0x000000, 0);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
@@ -353,6 +408,22 @@ export function PortfolioHero() {
       scene.add(hotLight);
 
       let rafId = 0;
+      let contextLost = false;
+
+      /*
+       * A GPU reset, a backgrounded tab reclaimed by the OS, or too many live
+       * contexts on the machine all fire this. Without it the canvas keeps its
+       * last frame frozen under `mix-blend-mode: screen`, which reads as a
+       * smear across the portrait rather than as a missing effect.
+       */
+      const onContextLost = (event: Event) => {
+        event.preventDefault();
+        contextLost = true;
+        window.cancelAnimationFrame(rafId);
+        canvas.style.display = "none";
+      };
+      canvas.addEventListener("webglcontextlost", onContextLost);
+
       const resize = () => {
         const rect = stage.getBoundingClientRect();
         renderer.setSize(rect.width, rect.height, false);
@@ -361,7 +432,7 @@ export function PortfolioHero() {
       };
 
       const render = () => {
-        if (cancelled) return;
+        if (cancelled || contextLost) return;
         const progress = progressRef.current;
         const pointer = pointerRef.current;
 
@@ -388,6 +459,7 @@ export function PortfolioHero() {
       disposeScene = () => {
         window.cancelAnimationFrame(rafId);
         window.removeEventListener("resize", resize);
+        canvas.removeEventListener("webglcontextlost", onContextLost);
         focusField.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             object.geometry.dispose();
@@ -419,39 +491,59 @@ export function PortfolioHero() {
 
         <div className="hero-copy-grid">
           <div className="hero-role">
-            <span className="hero-role-index">01 / Hero</span>
-            <p>{hero.role}</p>
-            <p>{hero.domains}</p>
+            <p>{hero.location}</p>
           </div>
 
           <div className="hero-beats">
             <div className="hero-beat hero-beat-one" data-beat="one">
-              <p className="hero-kicker">{hero.name}</p>
+              {/* Identity, seniority and domain sit above the headline so the
+                  45-second scan reaches them without interaction, at every
+                  breakpoint. See PRODUCT.md "Preserve the fast scan path". */}
+              <p className="hero-identity">
+                <span className="hero-identity-name">{hero.name}</span>
+                <span className="hero-identity-role">{hero.role}</span>
+                <span className="hero-identity-domains">{hero.domains}</span>
+                {/* Availability is the fact that decides whether this visitor
+                    keeps reading, and it used to live only in the menu overlay
+                    and at the far end of Contact. It sits inside the identity
+                    block rather than the left rail because this block is the
+                    one part of the scan path no breakpoint hides. */}
+                <span className="hero-identity-availability">
+                  <span className="hero-availability-dot" aria-hidden="true" />
+                  {hero.availability}
+                </span>
+                {/* The left rail that normally carries location is display:none
+                    on compact phones and short landscape. Location is part of
+                    the scan path at every breakpoint, so it reappears here —
+                    exactly where the rail is hidden, never both at once. */}
+                <span className="hero-identity-location">{hero.location}</span>
+              </p>
               <h1 id="hero-title">
-                {hero.headline.map((line) => (
-                  <span key={line}>{line}</span>
+                {hero.headline.map((line, index) => (
+                  <span key={line}>{index > 0 ? ` ${line}` : line}</span>
                 ))}
               </h1>
               <p className="hero-support">{hero.support}</p>
             </div>
 
             <p className="hero-beat hero-beat-statement" data-beat="two" aria-hidden="true">
-              {hero.statement.map((line) => (
-                <span key={line}>{line}</span>
-              ))}
-            </p>
-
-            <p className="hero-beat hero-beat-statement" data-beat="three" aria-hidden="true">
               {hero.close.map((line) => (
                 <span key={line}>{line}</span>
               ))}
             </p>
 
-            <div className="hero-actions" aria-label="Featured destinations">
+            {/* A bare div takes no accessible name, so the old aria-label was
+                dropped outright. `role="group"` is what makes the label reach
+                assistive tech — and the label now says where the pair goes
+                rather than calling them "destinations". */}
+            <div className="hero-actions" role="group" aria-label="Jump to a section">
               <Button04
                 className="hero-action hero-action-primary"
                 href="#work"
                 text="See my work"
+                /* The pair splits the row `flex: 1 1 0`, so both labels have to
+                   fit the same half. Neither does at 375px. */
+                compactText="See work"
                 variant="brand"
                 size="medium"
                 onClick={(event) => requestSection(event, "work")}
@@ -460,6 +552,9 @@ export function PortfolioHero() {
                 className="hero-action hero-action-secondary"
                 href="#about"
                 text="More about me"
+                /* Below 620px the full label overruns its own box and slides
+                   under the arrow glyph. Same swap the header CTA uses. */
+                compactText="About me"
                 variant="outline-light"
                 size="medium"
                 onClick={(event) => requestSection(event, "about")}

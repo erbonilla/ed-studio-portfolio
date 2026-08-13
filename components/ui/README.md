@@ -52,7 +52,7 @@ The shared component is used for:
 
 - the fixed navigation and full-screen menu collaboration actions;
 - both hero destination actions;
-- every case-study and repository action in Selected Work; and
+- every case-study and live-product action in Selected Work; and
 - the full-width contact email action.
 
 No provider, hook, image, SVG, icon package, or runtime state is required. Both

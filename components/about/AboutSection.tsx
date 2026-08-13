@@ -9,8 +9,14 @@ const ABOUT_BACKGROUND_FRAME_COUNT = 80;
 const ABOUT_BACKGROUND_ROOT = "/assets/about/background";
 const ABOUT_STORY_CARD_LABELS = ["Practice", "Working principles"];
 
+/*
+ * WebP. This is a decorative canvas — aria-hidden, behind a scrim, under a
+ * blur lens — and as JPEG the 80 frames were 17.6MB, the heaviest single asset
+ * group on the site and larger than the 195-frame hero sequence. At q78 the
+ * same 80 frames are 5.0MB with no visible difference through the scrim.
+ */
 const aboutBackgroundFramePath = (index: number) =>
-  `${ABOUT_BACKGROUND_ROOT}/frame-${String(index + 1).padStart(3, "0")}.jpg`;
+  `${ABOUT_BACKGROUND_ROOT}/frame-${String(index + 1).padStart(3, "0")}.webp`;
 
 type RevealState = {
   x: number;
@@ -76,7 +82,7 @@ export function AboutSection() {
 
     const orangePortrait = new Image();
     orangePortrait.decoding = "async";
-    orangePortrait.src = "/assets/about/about-orange.png";
+    orangePortrait.src = "/assets/about/about-orange.webp";
 
     const state: RevealState = {
       x: portrait.clientWidth * 0.5,
@@ -434,8 +440,32 @@ export function AboutSection() {
       if (!isDestroyed) drawBackgroundFrame(initialBackgroundIndex);
     });
 
+    /* The cards used to hold their flipped, decrypted face for good, so the
+       section always scrolled away mid-story and came back already spent.
+       Tracking the decrypted state here lets the exit flip re-arm the reveal. */
+    const storyCardDecrypted = new Set<number>();
+
     const triggerCardDecrypt = (index: number) => {
+      storyCardDecrypted.add(index);
       storyDecryptRefs.current[index]?.trigger();
+    };
+
+    const resetCardDecrypt = (index: number) => {
+      if (!storyCardDecrypted.has(index)) return;
+      storyCardDecrypted.delete(index);
+      storyDecryptRefs.current[index]?.reset();
+    };
+
+    /* Staggered windows inside the exit scroll range, so the two cards turn
+       back to "Practice" / "Working principles" in reading order. */
+    const cardExitWindows: Array<[number, number]> = [
+      [0, 0.5],
+      [0.12, 0.62],
+    ];
+    const flipBackEase = gsap.parseEase("power2.inOut");
+    const cardFlipBackProgress = (progress: number, index: number) => {
+      const [start, end] = cardExitWindows[index] ?? cardExitWindows[0];
+      return gsap.utils.clamp(0, 1, (progress - start) / (end - start));
     };
 
     gsap.registerPlugin(ScrollTrigger);
@@ -619,6 +649,44 @@ export function AboutSection() {
           );
 
         appendStorySequence(depthTimeline);
+
+        /* The depth timeline ends when the sticky stage starts scrolling away,
+           and there is a full viewport of exit left after that. The cards spend
+           it turning back to their front face.
+
+           This writes rotationY directly instead of running a second tween on
+           the same property: a tween here would render its from-value at
+           progress 0 on every ScrollTrigger refresh, and — sorted after the
+           depth trigger — would land on top of the depth timeline's own flip.
+           Skipping progress 0 leaves the depth timeline sole owner up to the
+           handoff point. */
+        const storyCardInners = gsap.utils.toArray<HTMLElement>(
+          ".about-story-card .about-story-card-inner",
+        );
+
+        ScrollTrigger.create({
+          trigger: understory,
+          start: "bottom bottom",
+          end: "bottom 40%",
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (self.progress <= 0) return;
+            storyCardInners.forEach((inner, index) => {
+              const flipBack = cardFlipBackProgress(self.progress, index);
+              gsap.set(inner, { rotationY: 180 * (1 - flipBackEase(flipBack)) });
+              /* Past 90° the back face is hidden, so re-scrambling the copy
+                 there is invisible. Coming back up, the card turns to face the
+                 reader again, so the reveal replays — but only upward: firing
+                 this on the way down would restart the decrypt the exit had
+                 just cleared. */
+              if (flipBack > 0.6) resetCardDecrypt(index);
+              else if (self.direction < 0) triggerCardDecrypt(index);
+            });
+          },
+          onLeaveBack: () => {
+            storyCardInners.forEach((inner) => gsap.set(inner, { rotationY: 180 }));
+          },
+        });
       });
 
       motionMedia.add("(max-width: 900px)", () => {
@@ -684,23 +752,33 @@ export function AboutSection() {
             },
           );
 
-          gsap.fromTo(
-            inner,
-            { rotationY: 0 },
-            {
-              rotationY: 180,
-              ease: "none",
+          /* One timeline owns the whole flip lifecycle — turn, hold, turn back
+             as the card leaves the top of the viewport — so the two halves
+             never fight over rotationY across a ScrollTrigger refresh. The
+             durations are fractions of the card's full pass through the
+             viewport; 0.35 keeps the opening flip on the same stretch of
+             scroll it had before the exit range was added. */
+          gsap
+            .timeline({
+              defaults: { ease: "none" },
               scrollTrigger: {
                 trigger: card,
                 start: "top 72%",
-                end: "top 34%",
+                end: "bottom top",
                 scrub: 0.45,
                 onUpdate: (self) => {
-                  if (self.progress >= 0.5) triggerCardDecrypt(cardIndex);
+                  if (self.progress >= 0.74) resetCardDecrypt(cardIndex);
+                  else if (self.progress >= 0.18) triggerCardDecrypt(cardIndex);
                 },
               },
-            },
-          );
+            })
+            /* Empty tween: ScrollTrigger maps the scroll range onto the
+               timeline's total duration, so without a full-length child the
+               positions below would be renormalized against 0.86 and both
+               flips would land late. */
+            .to({}, { duration: 1 }, 0)
+            .fromTo(inner, { rotationY: 0 }, { rotationY: 180, duration: 0.35 }, 0)
+            .to(inner, { rotationY: 0, duration: 0.28 }, 0.58);
         });
 
         gsap.fromTo(
@@ -800,6 +878,11 @@ export function AboutSection() {
       <div
         ref={portraitRef}
         className={`about-portrait${canvasReady ? " is-canvas-ready" : ""}`}
+        data-nav-theme="light"
+        /* This surface already replaces the pointer with its own "Reveal"
+           lens. The site reticle stands down here rather than riding on top
+           of it. */
+        data-pointer="hidden"
       >
         <div
           className="about-portrait-visual"
@@ -810,13 +893,13 @@ export function AboutSection() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="about-image about-image-grayscale"
-            src="/assets/about/about-grayscale.png"
+            src="/assets/about/about-grayscale.webp"
             alt=""
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="about-image about-image-orange-fallback"
-            src="/assets/about/about-orange.png"
+            src="/assets/about/about-orange.webp"
             alt=""
           />
           <canvas ref={canvasRef} className="about-liquid-canvas" aria-hidden="true" />
@@ -824,18 +907,21 @@ export function AboutSection() {
 
         <div className="about-image-shade" aria-hidden="true" />
         <div className="about-topline">
-          <span>02 / About</span>
+          <span>About</span>
           <span>Move to look beneath</span>
         </div>
 
-        <div className="about-title" id="about-title">
+        {/* A real h2: this was a div, so the document outline contained no
+            "About" entry at all and the section's aria-labelledby pointed at a
+            generic element. */}
+        <h2 className="about-title" id="about-title">
           <span className="about-title-line">
             <span>Human depth.</span>
           </span>
           <span className="about-title-line about-title-line-accent">
-            <span>System clarity.</span>
+            <span> System clarity.</span>
           </span>
-        </div>
+        </h2>
 
         <div className="about-reveal-hint" aria-hidden="true">
           <span>Hover or press</span>
@@ -928,20 +1014,26 @@ export function AboutSection() {
                 </div>
               ))}
             </div>
-            <div className="about-signals" aria-label="Professional highlights">
+            {/* These are four separate facts, not one string. Without the list
+                roles a screen reader ran them together as a single run of text,
+                and the aria-label on a bare div was ignored on top of that. */}
+            <div className="about-signals" role="list" aria-label="How I work">
               {about.signals.map((signal) => (
-                <span key={signal}>{signal}</span>
+                <span role="listitem" key={signal}>
+                  {signal}
+                </span>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="expertise" aria-labelledby="expertise-title">
+      <section className="expertise" aria-labelledby="expertise-title">
         <header className="expertise-heading">
           <div>
-            <p>Four disciplines. One practice.</p>
-            <h2 id="expertise-title">Expertise</h2>
+            {/* The heading carries the idea itself. "Expertise" under a kicker
+                said less than the kicker did. */}
+            <h2 id="expertise-title">Four disciplines. One practice.</h2>
           </div>
           <p className="expertise-intro">{expertise.intro}</p>
         </header>
@@ -959,13 +1051,10 @@ export function AboutSection() {
                   <li key={capability}>{capability}</li>
                 ))}
               </ul>
-              <span className="expertise-arrow" aria-hidden="true">
-                ↗
-              </span>
             </article>
           ))}
         </div>
-      </div>
+      </section>
     </section>
   );
 }

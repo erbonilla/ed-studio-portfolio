@@ -9,10 +9,26 @@
   text-transform: inherit;
   color: inherit;
   visibility: hidden;
+  /*
+   * The hidden default exists so the un-split text never flashes before the
+   * per-character wrappers are built. But "hidden until JavaScript says
+   * otherwise" means the Work heading and the Contact signature disappear
+   * outright whenever the motion chunk fails to arrive — scripting off, a
+   * blocked bundle, an offline repeat visit. This reveals them anyway, well
+   * after any real load would have finished.
+   */
+  animation: shuffle-visibility-failsafe 1ms linear 4s forwards;
 }
 
 .shuffle-parent.is-ready {
   visibility: visible;
+  animation: none;
+}
+
+@keyframes shuffle-visibility-failsafe {
+  to {
+    visibility: visible;
+  }
 }
 
 .shuffle-char-wrapper {

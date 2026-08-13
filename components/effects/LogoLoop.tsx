@@ -368,11 +368,15 @@ export const LogoLoop = memo(function LogoLoop({
   const logoLists = useMemo(
     () =>
       Array.from({ length: copyCount }, (_, copyIndex) => (
+        // `inert` as well as aria-hidden: the duplicate copies exist only to
+        // make the marquee seamless, and without it their links stay in the tab
+        // order while announcing as nothing.
         <ul
           className="logoloop__list"
           key={`copy-${copyIndex}`}
           role="list"
           aria-hidden={copyIndex > 0}
+          inert={copyIndex > 0}
           ref={copyIndex === 0 ? seqRef : undefined}
         >
           {logos.map((item, itemIndex) => renderLogoItem(item, `${copyIndex}-${itemIndex}`))}

@@ -14,7 +14,7 @@
   border-radius: clamp(26px, 3vw, 48px);
   background:
     radial-gradient(circle at 76% 10%, rgba(255, 79, 24, 0.08), transparent 25%),
-    #171717;
+    var(--graphite);
 }
 
 .topline {
@@ -24,9 +24,9 @@
   min-height: 68px;
   margin: 0 clamp(18px, 2.5vw, 40px);
   border-bottom: 1px solid rgba(255, 79, 24, 0.35);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -60,6 +60,32 @@
   color: var(--white);
 }
 
+/*
+ * Touch sizing for the Contact chapter. This is the conversion moment on the
+ * page and it held the three smallest targets on it: the address link was 15px
+ * tall, the Copy control 32, and "Back to top" 38. Coarse pointers only — the
+ * desktop row keeps its typographic scale, and the address underline still sits
+ * on the text, not on the padded box.
+ */
+@media (pointer: coarse) {
+  .topline a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+  }
+
+  .directRow a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .copyEmail {
+    min-height: 44px;
+  }
+}
+
 .statusDot {
   width: 7px;
   height: 7px;
@@ -73,16 +99,13 @@
   grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
   gap: clamp(48px, 8vw, 140px);
   align-items: end;
-  min-height: clamp(400px, 48vw, 640px);
+  /*
+   * The columns are bottom-anchored by design and at desktop widths the
+   * content already exceeds this, so the floor only applies on short content.
+   * Lowered so it stops adding arbitrary height when it does apply.
+   */
+  min-height: clamp(360px, 32vw, 500px);
   padding: clamp(54px, 7vw, 112px) clamp(18px, 5vw, 80px) clamp(42px, 5vw, 76px);
-}
-
-.eyebrow {
-  margin: 0 0 clamp(28px, 4vw, 60px);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .splitHeadline {
@@ -120,31 +143,205 @@
   max-width: 480px;
 }
 
-.resumeSpanishLink {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0 2px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-decoration-color: rgba(255, 79, 24, 0.72);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 5px;
+/* EN and ES are peers. The Spanish résumé used to be a small underlined link
+   under two large buttons, on a site that claims bilingual practice.
+   Peers, but not necessarily side by side: a large button spends ~95px on
+   padding and the icon before its label starts, so "Résumé — EN" needs ~230px
+   to render whole. A hard 2-up split gave it 154px in the desktop column and
+   194px at 1440 — the label ran out over the glyph at every desktop width, and
+   worse on tablets. Two tracks only when two tracks actually fit; one full
+   width otherwise. */
+.resumePair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 12px;
+}
+
+/*
+ * Availability facts, set as a definition list so the label/value pairing is
+ * real structure rather than styling.
+ */
+.availability {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px clamp(20px, 2.4vw, 36px);
+  max-width: 480px;
+  margin: clamp(26px, 3vw, 40px) 0 clamp(30px, 3.4vw, 46px);
+  padding-top: clamp(22px, 2.4vw, 32px);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.availability dt {
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: var(--type-label-sm);
+  font-weight: 700;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
-  transition: color 180ms ease;
 }
 
-.resumeSpanishLink:hover,
-.resumeSpanishLink:focus-visible {
-  color: var(--brand);
+.availability dd {
+  margin: 0;
+  color: var(--white);
+  font-size: clamp(13px, 0.19vw + 12.3px, 15px);
+  line-height: 1.5;
 }
 
-.resumeSpanishLink:focus-visible {
+.directRow {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+/* One pass of light across the address on a successful copy — the aperture
+   logic applied to a confirmation: the response points at the thing it acted
+   on instead of announcing itself somewhere else. */
+.directRow::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: -6px;
+  width: 34%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 79, 24, 0.26),
+    transparent
+  );
+}
+
+.directRow[data-copied="true"]::after {
+  animation: copy-sweep 620ms cubic-bezier(0.76, 0, 0.24, 1) 1;
+}
+
+@keyframes copy-sweep {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(300%);
+  }
+}
+
+.copyEmail {
+  min-height: 32px;
+  padding: 0 11px;
+  color: var(--white);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--type-label-sm);
+  font-weight: 700;
+  letter-spacing: var(--label-track-sm);
+  text-transform: uppercase;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.copyEmail[data-copied="true"] {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+/*
+ * Both labels occupy the same grid cell so the control never changes width
+ * between states, and they trade places on a hard-edged wipe rather than a
+ * cross-fade — the same seam the chapter breaks and section reveals use.
+ */
+.copySwap {
+  display: grid;
+  overflow: hidden;
+}
+
+.copySwap > span {
+  grid-area: 1 / 1;
+  transition: clip-path 220ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.copySwap > span:first-child {
+  clip-path: inset(0 0 0 0);
+}
+
+.copySwap > span:last-child {
+  clip-path: inset(0 100% 0 0);
+}
+
+.copyEmail[data-copied="true"] .copySwap > span:first-child {
+  clip-path: inset(0 0 0 100%);
+}
+
+.copyEmail[data-copied="true"] .copySwap > span:last-child {
+  clip-path: inset(0 0 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copySwap > span {
+    transition: none;
+  }
+
+  .directRow[data-copied="true"]::after {
+    animation: none;
+  }
+}
+
+.copyEmail:hover,
+.copyEmail:focus-visible {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.copyEmail:focus-visible {
   outline: 2px solid var(--brand);
-  outline-offset: 5px;
+  outline-offset: 3px;
+}
+
+/*
+ * Success stays sr-only: the control already confirms optically, with the label
+ * wipe and the pass of light across the address. Failure has no optical tell at
+ * all — the button just does nothing — so the blocked message is the one state
+ * that has to become visible.
+ */
+.copyStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.copyStatus[data-state="blocked"] {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 46ch;
+  margin: 10px 0 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  /* Tinted off the accent rather than gray, so it reads as this system's
+     warning. Brand Lift measures 6.9:1 on the ink ground; the accent itself is
+     reserved for actions, and this is a message. */
+  color: var(--brand-lift);
+  font-size: var(--type-label-sm);
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 .utility {
@@ -178,11 +375,11 @@
 }
 
 .utilityLabel {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.13em;
+  color: var(--muted);
+  font-size: var(--type-label-sm);
+  font-weight: 700;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
-  opacity: 0.62;
 }
 
 .socialLinks {
@@ -278,6 +475,7 @@
 }
 
 .signature {
+  container-type: inline-size;
   display: grid;
   width: 100%;
   min-height: clamp(180px, 20vw, 360px);
@@ -286,12 +484,24 @@
   place-items: center;
 }
 
+/*
+ * Sized against the container, not the viewport, so the name spans its box
+ * exactly at every width. The old viewport clamp overflowed a 353px box by
+ * 35px on a 375px phone and rendered "ED BONILL".
+ */
 .signatureTrack {
   display: block;
   width: 100%;
   color: var(--brand);
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(76px, 15.8vw, 300px);
+  /* Measured in the browser against the real loaded face: "ED BONILLA" in Syne
+     at -0.09em inks 6.08x its font-size, not the 4.93x this comment previously
+     assumed. At 18.5cqw that put the name at 113% of the container, so the
+     final "A" was clipped at every width — on a 375px phone the box showed
+     357px of a 317px opening. 15cqw is the value that actually lands the ~91%
+     full-bleed the design wants, with slack for the fallback face and for the
+     shuffle effect's transient per-character spans. */
+  font-size: min(15cqw, 300px);
   font-weight: 700;
   line-height: 0.72;
   letter-spacing: -0.09em;
@@ -308,9 +518,9 @@
   min-height: 66px;
   margin: 0 clamp(18px, 2.5vw, 40px);
   border-top: 1px solid rgba(255, 79, 24, 0.35);
-  font-size: 9px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -332,15 +542,36 @@
     gap: 52px;
   }
 
+  /*
+   * The buttons used to ride in a ~270px side column, and a large button
+   * spends ~93px of its width on padding and the icon before the label even
+   * starts — so "Start a conversation" overran the glyph and the résumé pair,
+   * splitting that column again, was hopeless. Actions now take the full
+   * width under the copy and the facts, which is also the truer hierarchy:
+   * this is the conversion control on the page, not a sidebar.
+   */
   .action {
     display: grid;
-    grid-template-columns: 1fr minmax(260px, 0.75fr);
-    gap: 36px;
-    align-items: end;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "copy availability"
+      "actions actions";
+    gap: 30px 36px;
+    align-items: start;
   }
 
   .action > p {
+    grid-area: copy;
     margin-bottom: 0;
+  }
+
+  .availability {
+    grid-area: availability;
+    margin: 0;
+  }
+
+  .contactActions {
+    grid-area: actions;
   }
 }
 
@@ -375,6 +606,12 @@
     display: block;
   }
 
+  .availability {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 26px 0 30px;
+  }
+
   .action > p {
     margin-bottom: 28px;
   }
@@ -402,10 +639,6 @@
   .signature {
     min-height: 150px;
     padding-block: 34px 30px;
-  }
-
-  .signatureTrack {
-    font-size: clamp(58px, 17.6vw, 108px);
   }
 
   .footer {

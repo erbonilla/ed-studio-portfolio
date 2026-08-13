@@ -170,7 +170,12 @@ export const DecryptedText = forwardRef<DecryptedTextHandle, DecryptedTextProps>
     }, []);
 
     const encryptInstantly = useCallback(() => {
+      /* Stop any reveal still in flight. Without this, `reset()` only emptied
+         the revealed set — the running interval picked up from there and
+         decrypted the text all over again. */
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
       const emptySet = new Set<number>();
+      setIsAnimating(false);
       setRevealedIndices(emptySet);
       setDisplayText(shuffleText(text, emptySet));
       setIsDecrypted(false);

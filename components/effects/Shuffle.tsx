@@ -296,11 +296,26 @@ export function Shuffle({
         wrappersRef.current.forEach((wrap) => {
           const strip = wrap.firstElementChild as HTMLElement | null;
           if (!strip) return;
-          const real = strip.querySelector('[data-orig="1"]');
+          const real = strip.querySelector('[data-orig="1"]') as HTMLElement | null;
           if (!real) return;
           strip.replaceChildren(real);
           strip.style.transform = "none";
           strip.style.willChange = "auto";
+          /*
+           * The per-character boxes are measured once, at whatever size the
+           * text happened to be when the reveal fired, and they are only
+           * needed while the strips are sliding. Left behind they outlive
+           * every later resize: these headings are sized off the container
+           * or the viewport, so rotating an iPad — or a late web-font swap —
+           * shrinks the glyphs inside boxes that keep the old width, and the
+           * word visibly splits apart. The resting state needs no fixed
+           * boxes, so hand the letters back to normal layout.
+           */
+          wrap.style.width = "";
+          wrap.style.height = "";
+          wrap.style.overflow = "";
+          real.style.width = "";
+          real.style.textAlign = "";
         });
       };
 

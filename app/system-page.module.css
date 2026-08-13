@@ -1,0 +1,167 @@
+/*
+ * Shared shell for the two documents a visitor can reach that are not the
+ * portfolio itself: a wrong address and a runtime failure. Both stay in the
+ * dark register — near-black ground, one accent, square corners, hairlines —
+ * so a broken URL still reads as the same studio rather than as a framework
+ * default page.
+ */
+
+.page {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding: clamp(96px, 12vw, 168px) clamp(20px, 3.4vw, 56px)
+    clamp(72px, 9vw, 132px);
+  overflow: hidden;
+  color: var(--white);
+  background: var(--ink);
+}
+
+/* Same fractal-noise overlay the hero carries, at the same 4.5% opacity. */
+.page::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+}
+
+.shell {
+  position: relative;
+  z-index: 2;
+  width: min(1800px, 100%);
+  margin: 0 auto;
+}
+
+.topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  margin: 0 0 clamp(28px, 4vw, 52px);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.topline .code {
+  color: var(--brand);
+}
+
+/* The intro's shutter seam, held still. */
+.seam {
+  display: block;
+  height: 1px;
+  margin: 0 0 clamp(28px, 4vw, 52px);
+  background: var(--line);
+}
+
+.heading {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-syne), Arial, sans-serif;
+  font-size: clamp(44px, 6.6vw, 108px);
+  font-weight: 700;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.heading span {
+  display: block;
+}
+
+.heading span:last-child {
+  color: var(--brand);
+}
+
+.body {
+  width: min(52ch, 100%);
+  margin: clamp(26px, 3vw, 40px) 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(16px, 1.15vw, 19px);
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(32px, 4vw, 52px);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  margin: clamp(40px, 5vw, 72px) 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.meta a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  transition: color 220ms cubic-bezier(0.76, 0, 0.24, 1),
+    border-color 220ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.meta a:hover,
+.meta a:focus-visible {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.meta a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+}
+
+/* The failure identifier is data a visitor may need to quote back, so it is
+   selectable and set apart rather than styled as prose. */
+.digest {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: clamp(22px, 2.6vw, 32px) 0 0;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+  user-select: all;
+}
+
+.digest b {
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+@media (max-width: 620px) {
+  .heading {
+    font-size: clamp(38px, 12.5vw, 62px);
+  }
+
+  .actions > * {
+    flex: 1 1 100%;
+  }
+}

@@ -31,11 +31,30 @@ type Button04Variant =
 
 type Button04Size = "small" | "medium" | "large";
 
+/*
+ * Where the arrow lands on hover. "diagonal" is the go-there gesture the rest
+ * of the site uses; "down" turns the same glyph into a download, so a control
+ * that hands over a file says so with the shape rather than a second icon.
+ */
+type Button04Arrow = "diagonal" | "down";
+
 type Button04SharedProps = {
-  text?: string;
+  /*
+   * Required, not defaulted. The default used to be the template's
+   * `"Nothing-Plop"` placeholder, so a forgotten prop shipped a nonsense label
+   * instead of failing the build.
+   */
+  text: string;
   compactText?: string;
+  /*
+   * Swapped in under the pointer and on keyboard focus. Decoration only — it
+   * is hidden from assistive tech and never touches the accessible name, so
+   * "click Résumé — EN" keeps matching under voice control (WCAG 2.5.3).
+   */
+  hoverText?: string;
   variant?: Button04Variant;
   size?: Button04Size;
+  arrow?: Button04Arrow;
   fullWidth?: boolean;
   className?: string;
 };
@@ -58,9 +77,11 @@ const joinClassNames = (...values: Array<string | undefined | false>) =>
 function ButtonContent({
   text,
   compactText,
+  hoverText,
 }: {
   text: string;
   compactText?: string;
+  hoverText?: string;
 }) {
   return (
     <>
@@ -77,6 +98,11 @@ function ButtonContent({
           </span>
           {compactText ? (
             <span className="button04_text is-compact">{compactText}</span>
+          ) : null}
+          {hoverText ? (
+            <span className="button04_text is-hover" aria-hidden="true">
+              {hoverText}
+            </span>
           ) : null}
         </span>
         <span className="button04_icon-wrap" aria-hidden="true">
@@ -118,10 +144,12 @@ function ButtonContent({
 
 export function Button04(props: Button04Props) {
   const {
-    text = "Nothing-Plop",
+    text,
     compactText,
+    hoverText,
     variant = "brand",
     size = "medium",
+    arrow = "diagonal",
     fullWidth = false,
     className,
     ...elementProps
@@ -132,13 +160,21 @@ export function Button04(props: Button04Props) {
     className: classes,
     "data-variant": variant,
     "data-size": size,
+    "data-arrow": arrow,
+    /* The label wipe is keyed off the button, not the span, so a button
+       without a hover label never wipes the one it has. */
+    "data-hover-label": hoverText ? "" : undefined,
     "data-full-width": fullWidth ? "" : undefined,
   };
+
+  const content = (
+    <ButtonContent text={text} compactText={compactText} hoverText={hoverText} />
+  );
 
   if ("href" in elementProps && elementProps.href !== undefined) {
     return (
       <a {...elementProps} {...dataProps}>
-        <ButtonContent text={text} compactText={compactText} />
+        {content}
       </a>
     );
   }
@@ -148,7 +184,7 @@ export function Button04(props: Button04Props) {
 
   return (
     <button type="button" {...buttonProps} {...dataProps}>
-      <ButtonContent text={text} compactText={compactText} />
+      {content}
     </button>
   );
 }

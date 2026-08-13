@@ -66,19 +66,24 @@
   --button04-border: rgba(17, 21, 22, 0.52);
 }
 
+/*
+ * The three sizes only ever changed height — all three set an 11px label, so a
+ * 72px button and a 42px button spoke at the same volume. The label now scales
+ * with the control.
+ */
 .button04[data-size="small"] {
   min-height: 42px;
-  font-size: 9px;
+  font-size: var(--type-label-sm);
 }
 
 .button04[data-size="medium"] {
   min-height: 52px;
-  font-size: 10px;
+  font-size: var(--type-label);
 }
 
 .button04[data-size="large"] {
   min-height: 72px;
-  font-size: 11px;
+  font-size: clamp(13px, 0.25vw + 12.1px, 17px);
 }
 
 .button04[data-full-width] {
@@ -103,7 +108,12 @@
   min-height: inherit;
   align-items: center;
   justify-content: space-between;
-  gap: clamp(22px, 3vw, 48px);
+  /*
+   * A minimum separation, not the spacing itself — `space-between` already
+   * opens wide buttons. Keyed to the viewport it hit 43px, which on a 194px
+   * button drove the label into the glyph.
+   */
+  gap: clamp(18px, 1.4vw, 30px);
   width: 100%;
   padding: 0 12px 0 19px;
 }
@@ -124,13 +134,69 @@
   min-width: 0;
 }
 
+/*
+ * `min-width: 0` on the label lets the grid cell shrink under pressure, but a
+ * nowrap label kept its full width anyway and simply painted outside the cell —
+ * straight across the icon, since the button clips rather than reflows. Failing
+ * to an ellipsis costs nothing when the label fits and stays readable when it
+ * does not.
+ */
 .button04_text {
   grid-area: 1 / 1;
+  /*
+   * Clipping is horizontal only, but `overflow` has no per-axis form that
+   * stays visible on the other one. The label sets `line-height: 1`, which is
+   * shorter than the font's own line box, so a plain clip shaves the accent
+   * off "RÉSUMÉ". Padding pushes the clip edge past the glyphs and the equal
+   * negative margin hands the original box back to the grid, so nothing moves.
+   */
+  padding-block: 0.3em;
+  margin-block: -0.3em;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .button04_text.is-compact {
   display: none;
+}
+
+/*
+ * Both labels sit in the same grid cell, so the control never changes width
+ * between states, and they trade places on a hard-edged wipe rather than a
+ * cross-fade — the same seam the Copy control and the chapter breaks use.
+ */
+.button04_text.is-hover {
+  clip-path: inset(0 100% 0 0);
+}
+
+.button04[data-hover-label] .button04_text {
+  transition: clip-path 300ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.button04[data-hover-label]:focus-visible .button04_text:not(.is-hover) {
+  clip-path: inset(0 0 0 100%);
+}
+
+.button04[data-hover-label]:focus-visible .button04_text.is-hover {
+  clip-path: inset(0 0 0 0);
+}
+
+/*
+ * Swap on hover only where hover exists. A tap on iOS leaves `:hover` applied
+ * until the next tap elsewhere, and the two controls this is used on differ by
+ * nothing but their label — a stuck "Download" on both would erase which
+ * language the visitor picked. Focus keeps the swap everywhere: a keyboard
+ * user has an outline saying which control the word belongs to.
+ */
+@media (hover: hover) {
+  .button04[data-hover-label]:hover .button04_text:not(.is-hover) {
+    clip-path: inset(0 0 0 100%);
+  }
+
+  .button04[data-hover-label]:hover .button04_text.is-hover {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 .button04_icon-wrap {
@@ -170,6 +236,17 @@
   gap: 2px;
   opacity: 0;
   transform: translate(-8px, 8px) rotate(-57deg);
+}
+
+/*
+ * The dots draw an arrow pointing right; the rotation is what aims it. The
+ * diagonal lands at -45deg (up and out, "go there"), the download at 90deg
+ * (straight down). Each starts 12deg short of its resting angle and travels
+ * the last of the distance along its own axis — the diagonal moves up and
+ * out, the download falls.
+ */
+.button04[data-arrow="down"] .button04_icon.is-arrow {
+  transform: translate(0, -8px) rotate(78deg);
 }
 
 .button04_dot {
@@ -219,6 +296,12 @@
   transform: translate(0) rotate(-45deg);
 }
 
+.button04[data-arrow="down"]:hover .button04_icon.is-arrow,
+.button04[data-arrow="down"]:focus-visible .button04_icon.is-arrow {
+  opacity: 1;
+  transform: translate(0) rotate(90deg);
+}
+
 .button04:hover .button04_icon.is-arrow .button04_dot,
 .button04:focus-visible .button04_icon.is-arrow .button04_dot {
   opacity: 1;
@@ -250,7 +333,8 @@
   .button04,
   .button04_bg,
   .button04_icon,
-  .button04_dot {
+  .button04_dot,
+  .button04[data-hover-label] .button04_text {
     transition-duration: 0.01ms !important;
   }
 

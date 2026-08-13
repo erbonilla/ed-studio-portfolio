@@ -1,11 +1,66 @@
+@import "@fontsource-variable/syne";
+@import "@fontsource-variable/inter";
+
+/*
+ * Metric-adjusted fallbacks. Syne is materially narrower than Arial Black and
+ * Inter slightly narrower than Helvetica Neue; without these the swap from
+ * fallback to real face reflows the display type and clips the hero lines.
+ */
+@font-face {
+  font-family: "Syne Fallback";
+  src: local("Arial Black"), local("Helvetica Neue Bold"), local("Arial Bold");
+  size-adjust: 86%;
+  ascent-override: 96%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Helvetica Neue"), local("Helvetica"), local("Arial");
+  size-adjust: 99%;
+  ascent-override: 96%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
 :root {
   --brand: #ff4f18;
   --ink: #050505;
   --line: rgba(255, 255, 255, 0.24);
   --muted: #a3a3a3;
   --white: #ffffff;
-  --font-inter: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-syne: "Arial Black", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Light-register tokens, all documented in DESIGN.md. */
+  --paper: #f2efe8;
+  --graphite: #111516;
+  --slate: #42494a;
+  --stone: #434a4b;
+  --ember-deep: #9d3d21;
+  /* Accent lift for hover fills — a tint of the one accent, not a second hue. */
+  --brand-lift: #ff6334;
+  /* Load-state ground behind the Work frame sequence, tuned to the median tone
+     of those frames so the swap is not a flash. */
+  --work-frame-ground: #d1c1ba;
+  --nav-height: 82px;
+  /*
+   * Label roles. The metadata layer is the system's connective tissue and it
+   * had collapsed into 38 hardcoded `font-size: 11px` declarations carrying six
+   * weights and eight tracking values — a kicker, a data key, a button label
+   * and a chip all set identically. Two roles now carry it, and both scale:
+   * labels used to stay 11px on a 2560px display while the hero ran 126px.
+   *
+   * `--type-label`  — primary: kickers, nav, buttons, identity, status lines.
+   * `--type-label-sm` — secondary: indices, data keys, chips, captions.
+   * The pair resolves to 12/11px at 375px and 14/12.4px at 1440px, so the two
+   * steps stay distinguishable without either crossing the 11px floor.
+   */
+  --type-label: clamp(12px, 0.19vw + 11.3px, 15px);
+  --type-label-sm: clamp(11px, 0.13vw + 10.5px, 13px);
+  --label-track: 0.12em;
+  --label-track-sm: 0.1em;
+  --font-inter: "Inter Variable", "Inter Fallback", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-syne: "Syne Variable", "Syne Fallback", "Arial Black", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
 }
 
 * {
@@ -129,10 +184,10 @@ main {
   position: absolute;
   z-index: 2;
   top: clamp(22px, 3.3vw, 52px);
-  font-size: 10px;
+  font-size: var(--type-label);
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -146,7 +201,9 @@ main {
 
 .hero-sequence {
   position: relative;
-  height: 500svh;
+  /* Two beats, not three. 500svh spent 4.4 viewports delivering three slogans
+     and no facts before the first evidence on the page. */
+  height: 200svh;
   background: var(--ink);
 }
 
@@ -182,8 +239,31 @@ main {
   will-change: transform;
 }
 
+/*
+ * The 2D context is created with `alpha: false`, so an un-drawn canvas is an
+ * opaque black rectangle — not a transparent one. Sitting above the stage's CSS
+ * still, that turned "the frame sequence failed to load" into "the hero is
+ * black". The canvas stays out of the way until it has actually painted.
+ */
 .hero-frame-canvas {
   display: block;
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-frame-layer[data-painted="true"] .hero-frame-canvas {
+  opacity: 1;
+}
+
+/*
+ * The closing statement is stacked on the headline and only pulled apart by the
+ * scroll timeline. Until that timeline exists — the motion chunk is still in
+ * flight, or never arrives — the two overlap. Hidden here, revealed by the
+ * inline styles GSAP writes, which outrank this.
+ */
+.hero-beat-statement {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .hero-three-canvas {
@@ -207,19 +287,63 @@ main {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
 }
 
+.skip-link {
+  position: fixed;
+  z-index: 90;
+  top: 0;
+  left: clamp(20px, 3.4vw, 56px);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 17px;
+  color: var(--ink);
+  background: var(--brand);
+  font-size: var(--type-label);
+  font-weight: 700;
+  letter-spacing: var(--label-track);
+  text-decoration: none;
+  text-transform: uppercase;
+  transform: translateY(-120%);
+  transition: transform 220ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.skip-link:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+  transform: translateY(0);
+}
+
 .hero-nav {
+  /* Set per register: the bar crosses near-black, orange and cream grounds. */
+  --nav-fg: var(--white);
+  --nav-rule: var(--line);
+  --nav-veil: linear-gradient(180deg, rgba(5, 5, 5, 0.62), transparent);
+
   position: fixed;
   z-index: 40;
   top: 0;
   left: clamp(20px, 3.4vw, 56px);
   right: clamp(20px, 3.4vw, 56px);
-  height: 82px;
+  height: var(--nav-height);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(5, 5, 5, 0.62), transparent);
+  color: var(--nav-fg);
+  border-bottom: 1px solid var(--nav-rule);
+  background: var(--nav-veil);
   pointer-events: none;
+  transition: color 260ms ease, border-color 260ms ease, background 260ms ease;
+}
+
+/*
+ * Light register: the orange marquee, the orange About portrait, and the cream
+ * Work chapter. Without this the white wordmark, the white hairline and the
+ * orange CTA all disappear across ~40% of the page.
+ */
+.hero-nav[data-theme="light"] {
+  --nav-fg: #111516;
+  --nav-rule: rgba(17, 21, 22, 0.2);
+  --nav-veil: linear-gradient(180deg, rgba(242, 239, 232, 0.72), transparent);
 }
 
 .hero-wordmark {
@@ -230,15 +354,21 @@ main {
 
 .hero-role,
 .hero-scroll-status {
-  font-size: 11px;
+  font-size: var(--type-label-sm);
   line-height: 1.2;
-  letter-spacing: 0.11em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
+/*
+ * Only the family is inherited. `font: inherit` also reset font-size, and it
+ * out-specified every size these controls declare — MENU and CLOSE rendered at
+ * the 16px body size instead of the 9–12px they are designed at, outranking
+ * the CTA beside them.
+ */
 .site-navigation button,
 .portfolio-menu button {
-  font: inherit;
+  font-family: inherit;
 }
 
 .nav-brand-button,
@@ -253,6 +383,9 @@ main {
 
 .nav-brand-button {
   width: max-content;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   padding: 8px 0;
   background: transparent;
 }
@@ -262,13 +395,16 @@ main {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  min-height: 42px;
+  /* 44px, matching `.nav-brand-button` beside it. At 42 the primary mobile
+     navigation control was the one header target under the touch minimum, and
+     the header is 82px tall so the extra 2px changes no layout. */
+  min-height: 44px;
   padding: 0 6px;
-  color: var(--white);
+  color: currentColor;
   background: transparent;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: var(--type-label);
+  font-weight: 700;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -336,9 +472,9 @@ main {
   padding: 0 18px;
   color: #050505;
   background: var(--brand);
-  font-size: 11px;
+  font-size: var(--type-label);
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   transition: color 220ms ease, background 220ms ease, transform 220ms ease;
 }
@@ -346,8 +482,21 @@ main {
 .nav-collaboration-cta:hover,
 .nav-collaboration-cta:focus-visible {
   color: #050505;
-  background: #ff6334;
+  background: var(--brand-lift);
   transform: translateY(-2px);
+}
+
+/* On the orange marquee an orange CTA is invisible; graphite is the documented
+   dark arrow-button variant and reads on both light grounds. */
+.hero-nav[data-theme="light"] .nav-collaboration-cta {
+  color: var(--white);
+  background: #111516;
+}
+
+.hero-nav[data-theme="light"] .nav-collaboration-cta:hover,
+.hero-nav[data-theme="light"] .nav-collaboration-cta:focus-visible {
+  color: #050505;
+  background: var(--brand);
 }
 
 .nav-cta-arrow {
@@ -380,7 +529,7 @@ main {
   min-height: 100svh;
   overflow: auto;
   color: var(--white);
-  background: #191919;
+  background: var(--graphite);
   visibility: hidden;
   pointer-events: none;
   clip-path: inset(0 0 100% 0 round 0 0 32px 32px);
@@ -415,13 +564,14 @@ main {
 .menu-close {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   gap: 12px;
   padding: 10px 6px;
   color: rgba(255, 255, 255, 0.78);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--type-label);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -452,9 +602,9 @@ main {
   padding: 0 15px;
   color: #050505;
   background: var(--brand);
-  font-size: 10px;
+  font-size: var(--type-label);
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -489,13 +639,13 @@ main {
   color: rgba(255, 255, 255, 0.96);
   text-decoration: none;
   perspective: 900px;
-  transition: color 220ms ease, padding-left 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color 220ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .portfolio-menu-links a:hover,
 .portfolio-menu-links a:focus-visible,
 .portfolio-menu-links a[data-active="true"] {
-  padding-left: 10px;
+  transform: translateX(10px);
   color: var(--brand);
 }
 
@@ -538,9 +688,26 @@ main {
   align-self: end;
   padding-bottom: 12px;
   color: var(--brand);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
+}
+
+/*
+ * Every numeral the system shows is an index or a readout, and Inter's default
+ * figures are proportional: "01" measures 2.2px narrower than "02", so the menu
+ * index column stepped sideways row by row, and the two counters that animate
+ * — the About depth readout and the menu preview number — twitched on every
+ * tick. Tabular figures fix all of them.
+ */
+.menu-link-index,
+.menu-preview-number,
+.expertise-index,
+.about-story-card-index,
+.about-depth-progress,
+.project-rail span,
+.hero-scroll-status {
+  font-variant-numeric: tabular-nums;
 }
 
 .portfolio-menu-meta {
@@ -561,9 +728,9 @@ main {
 .menu-meta-label {
   margin-bottom: 8px !important;
   color: rgba(255, 255, 255, 0.64);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 600;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -662,8 +829,8 @@ main {
   display: grid;
   gap: 6px;
   color: rgba(255, 255, 255, 0.68);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: var(--type-label-sm);
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -673,11 +840,93 @@ main {
   gap: 10px;
 }
 
-.menu-meta-signals span {
+/* Scoped to the marker itself. As `.menu-meta-signals span` this also caught
+   the résumé label and the sr-only suffixes and squared them into 7px dots. */
+.menu-meta-signals p > span:first-child {
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
   background: var(--brand);
+}
+
+.menu-meta-resume {
+  align-items: flex-start;
+}
+
+.menu-meta-resume > span:first-child {
+  /* Aligned to the first line's cap height, not to the block's centre — the
+     group can run to two lines in the narrow meta column. */
+  margin-top: 0.28em;
+}
+
+.menu-meta-resume-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 9px;
+}
+
+.menu-meta-resume-label {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.menu-meta-resume a {
+  color: var(--white);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  transition: color 220ms cubic-bezier(0.76, 0, 0.24, 1),
+    border-color 220ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.menu-meta-resume a:hover,
+.menu-meta-resume a:focus-visible {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.menu-meta-resume a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+}
+
+.menu-meta-resume i {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: normal;
+}
+
+/*
+ * Touch sizing for the menu overlay. This overlay is the one place a visitor
+ * can reach the résumé from anywhere on the page, and on a phone those two
+ * links were 55x19 targets sitting 9px apart — the smallest and most
+ * consequential targets on the site. The social row was 40px, just under.
+ *
+ * Scoped to coarse pointers so the desktop overlay keeps its typographic
+ * density; the underline stays on the text box, so only the hit area grows.
+ */
+@media (pointer: coarse) {
+  .menu-meta-resume-body {
+    align-items: center;
+    gap: 0 4px;
+    /* Cancels the leading edge of the first link's padding so the group still
+       lines up with the label above it. */
+    margin-left: -10px;
+  }
+
+  .menu-meta-resume-label {
+    padding-left: 10px;
+  }
+
+  .menu-meta-resume a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+
+  .menu-social-link {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .portfolio-menu-preview {
@@ -743,8 +992,8 @@ main {
   gap: 20px;
   padding-top: 12px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 9px;
-  letter-spacing: 0.1em;
+  font-size: var(--type-label-sm);
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -807,12 +1056,6 @@ main {
   color: var(--muted);
 }
 
-.hero-role-index {
-  display: block;
-  margin-bottom: 18px;
-  color: var(--brand);
-}
-
 .hero-role p {
   margin: 0 0 7px;
 }
@@ -831,16 +1074,106 @@ main {
 }
 
 .hero-beat-one {
-  max-width: 820px;
+  /*
+   * Above ~1830px the hero grid's copy column is wider than this cap, so the
+   * cap — not the column — decides where the headline wraps. At 820px the
+   * third line broke again at the top of the size range; 880px is what the
+   * capped 112px display needs to hold three lines, and it still sits inside
+   * the column at every width.
+   */
+  max-width: 880px;
 }
 
-.hero-kicker {
+/*
+ * The hero identity block. Not an eyebrow: it carries the four facts a hiring
+ * manager scans for (who, level, discipline, domain) and they appear nowhere
+ * else above the fold.
+ */
+.hero-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 13px;
   margin: 0 0 22px;
-  color: var(--brand);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.13em;
+  font-size: var(--type-label);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
+}
+
+.hero-identity-name {
+  color: var(--white);
+}
+
+.hero-identity-role {
+  position: relative;
+  padding-left: 14px;
+  color: var(--brand);
+}
+
+.hero-identity-role::before {
+  position: absolute;
+  top: 0.1em;
+  bottom: 0.1em;
+  left: 0;
+  width: 1px;
+  content: "";
+  background: var(--line);
+}
+
+/*
+ * Name + role lead at the primary label size; domains and availability drop to
+ * the secondary step. Previously all three lines sat at one size and read as a
+ * single grey brick, with the role — the one fact a recruiter is scanning for —
+ * carrying no more weight than the domain list under it.
+ */
+.hero-identity-domains {
+  flex-basis: 100%;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--type-label-sm);
+  font-weight: 500;
+  letter-spacing: var(--label-track-sm);
+}
+
+/*
+ * Availability and the compact location line. Both sit inside the identity
+ * block because that block survives every breakpoint, unlike the left rail.
+ * Weight and a marker separate them from the role — no second hue.
+ */
+.hero-identity-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-basis: 100%;
+  /* A larger step than the 6px above it: availability is its own beat, not the
+     third line of the domain list. */
+  margin-top: 14px;
+  color: var(--white);
+  font-size: var(--type-label-sm);
+  font-weight: 600;
+  letter-spacing: var(--label-track-sm);
+}
+
+.hero-availability-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 24px rgba(255, 79, 24, 0.4);
+}
+
+/* Shown only where `.hero-role` is suppressed; the two never appear together. */
+.hero-identity-location {
+  display: none;
+  flex-basis: 100%;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--type-label-sm);
+  font-weight: 500;
+  letter-spacing: var(--label-track-sm);
 }
 
 .hero-beat h1,
@@ -852,6 +1185,9 @@ main {
   line-height: 0.82;
   letter-spacing: -0.065em;
   text-transform: uppercase;
+  /* Backstop: the sizes below are tuned to fit, but a long word must never
+     leave the viewport rather than wrap. */
+  overflow-wrap: anywhere;
 }
 
 .hero-beat h1 span,
@@ -864,6 +1200,11 @@ main {
   color: var(--brand);
 }
 
+/*
+ * Leading tracks measure across the page: tight columns take less, wide ones
+ * more, plus a step for light-on-dark. This runs ~60ch, the widest reading
+ * column on the dark register.
+ */
 .hero-support {
   width: min(420px, 78%);
   margin: 32px 0 0;
@@ -886,7 +1227,30 @@ main {
 @media (min-width: 901px) {
   .hero-beats {
     min-height: min(68vh, 650px);
-    padding-bottom: clamp(72px, 9vh, 96px);
+    /* The identity block is a line taller than the kicker it replaced; at
+       1280x720 the support copy reached into the anchored action row. */
+    padding-bottom: clamp(100px, 11vh, 124px);
+  }
+
+  /*
+   * The headline is authored as three lines. The copy column is an `fr` of the
+   * hero grid — about 48% of the viewport — and at 7.25vw the third line
+   * ("into motion.") wanted ~12% more width than the column gives, so it wrapped
+   * to a fourth. That extra line is what pushed the support paragraph down
+   * through the anchored action row: at 1280x720 the two overlapped by 8px and
+   * the last line of the paragraph was cut in half.
+   *
+   * Padding on `.hero-beats` cannot fix it — `.hero-beat` is absolutely
+   * positioned and centred, so it overflows the box symmetrically and more
+   * padding only lifts the identity block under the fixed header.
+   *
+   * 6.25vw is measured, not guessed: it is the largest step that keeps the
+   * longest line inside the column at every desktop width, which restores the
+   * three-line composition and returns ~46px of clearance above the actions.
+   */
+  .hero-beat h1,
+  .hero-beat-statement {
+    font-size: clamp(58px, 6.25vw, 112px);
   }
 }
 
@@ -897,9 +1261,9 @@ main {
   justify-content: space-between;
   gap: 28px;
   padding: 0 17px;
-  font-size: 10px;
+  font-size: var(--type-label);
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: var(--label-track);
   text-decoration: none;
   text-transform: uppercase;
   transition: color 220ms ease, background 220ms ease, transform 220ms ease;
@@ -1010,22 +1374,71 @@ main {
       linear-gradient(180deg, rgba(5, 5, 5, 0.58) 0%, transparent 24%, transparent 62%, rgba(5, 5, 5, 0.86) 100%);
   }
 
+  /* Copy above, location rail below. The rail used to be pinned `bottom: 0`
+     over the top of whatever the copy column did; as a row it takes its own
+     space, and it collapses to nothing on the sizes that hide it. */
   .hero-copy-grid {
     grid-template-columns: minmax(0, 1fr);
-    align-items: center;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    row-gap: 14px;
   }
 
   .hero-role {
-    position: absolute;
-    left: 0;
-    bottom: 0;
+    grid-row: 2;
+    align-self: end;
     padding: 0;
   }
 
+  /*
+   * All three children of this box — both beats and the action row — were
+   * absolutely positioned, so the box reserved room for none of them and the
+   * clearance above the buttons was whatever a hand-tuned `bottom` offset and
+   * a `padding-top` in `vh` happened to leave. Every viewport outside the
+   * tuned set collided: the support copy ran 26px under the buttons on a
+   * 360x740 phone, and on a 540x720 Surface Duo the headline crossed them by
+   * 116px and the paragraph landed outside the copy box entirely.
+   *
+   * Two rows instead. The beats share the first and still cross-fade in place;
+   * the actions own the second and cannot be reached. Row one takes all the
+   * slack and aligns its content to the bottom, so the copy keeps sitting low
+   * over the portrait where there is room, and gives that room up from the top
+   * — away from the buttons — where there is not.
+   */
   .hero-beats {
+    grid-row: 1;
     width: min(690px, 92%);
     min-width: 0;
-    min-height: 58vh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: end;
+    row-gap: clamp(20px, 4vh, 44px);
+  }
+
+  /* Only the headline beat joins the flow — it is the taller of the two, so it
+     is the one that has to size row one. The closing statement stays out of
+     flow and simply overlays the same row, which is also what the short-phone
+     and short-landscape blocks below already assume of it. */
+  .hero-beat-one {
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1 / 2 / 2;
+  }
+
+  /* End lines spelled out, not left `auto`: this one stays absolutely
+     positioned, and an abspos grid child resolves an `auto` end line to the
+     container's padding edge rather than to a one-track span — so `1 / 1`
+     alone handed it the whole box and the closing statement came up over the
+     action row. */
+  .hero-beat-statement {
+    grid-area: 1 / 1 / 2 / 2;
+  }
+
+  .hero-actions {
+    position: relative;
+    bottom: auto;
+    grid-area: 2 / 1 / 3 / 2;
   }
 
   .hero-scroll-status {
@@ -1048,11 +1461,11 @@ main {
   }
 
   .hero-sequence {
-    height: 440svh;
+    height: 180svh;
   }
 
   .hero-nav {
-    height: 70px;
+    --nav-height: 70px;
     grid-template-columns: minmax(90px, 1fr) auto minmax(110px, 1fr);
   }
 
@@ -1062,7 +1475,7 @@ main {
 
   .nav-menu-trigger {
     gap: 8px;
-    font-size: 9px;
+    font-size: var(--type-label-sm);
   }
 
   .nav-menu-icon {
@@ -1071,11 +1484,11 @@ main {
 
   .nav-collaboration-cta {
     min-width: 0;
-    min-height: 40px;
-    gap: 8px;
-    padding: 0 10px;
-    font-size: 7.5px;
-    letter-spacing: 0.04em;
+    min-height: 44px;
+    gap: 6px;
+    padding: 0 8px;
+    font-size: var(--type-label-sm);
+    letter-spacing: 0.02em;
   }
 
   .portfolio-menu {
@@ -1093,7 +1506,7 @@ main {
 
   .menu-close {
     gap: 7px;
-    font-size: 8px;
+    font-size: var(--type-label-sm);
   }
 
   .menu-close-icon {
@@ -1105,11 +1518,16 @@ main {
     top: 5px;
   }
 
+  /*
+   * This control ran at 7px — a direct breach of the 11px floor, and inside a
+   * button. The compact "Contact" label plus tighter padding buys the width
+   * back without shrinking the type below the floor.
+   */
   .menu-collaboration-cta {
-    gap: 7px;
+    gap: 6px;
     min-height: 38px;
-    padding: 0 9px;
-    font-size: 7px;
+    padding: 0 8px;
+    font-size: var(--type-label-sm);
     letter-spacing: 0.03em;
   }
 
@@ -1143,7 +1561,7 @@ main {
   .portfolio-menu-links a:hover,
   .portfolio-menu-links a:focus-visible,
   .portfolio-menu-links a[data-active="true"] {
-    padding-left: 5px;
+    transform: translateX(5px);
   }
 
   .menu-link-marker {
@@ -1184,21 +1602,30 @@ main {
     grid-column: 1 / -1;
   }
 
+  /* Four 44px targets do not fit a half-width column, so the row broke 3 + 1.
+     Across both columns they sit on one line with room to spare. */
+  .portfolio-menu-meta > div:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
   .hero-copy-grid {
     top: 70px;
     bottom: 60px;
   }
 
+  /* `min-height: 64vh` with `padding-top: 18vh` was the phone half of the
+     guesswork the two-row grid replaces: it placed the copy by pushing it down
+     a fixed distance and hoped the buttons were still below it. Row one now
+     owns that space and hands back whatever the copy does not need. */
   .hero-beats {
     width: 100%;
-    min-height: 64vh;
-    align-items: flex-start;
-    padding-top: 18vh;
   }
 
   .hero-beat h1,
   .hero-beat-statement {
-    font-size: clamp(48px, 16vw, 76px);
+    /* 13vw keeps the longest line ("EXPERIENCES.") inside the 20px gutters at
+       the 375px floor; 16vw clipped it by 92px. */
+    font-size: clamp(42px, 13vw, 72px);
     line-height: 0.86;
   }
 
@@ -1209,7 +1636,6 @@ main {
 
   .hero-actions {
     width: min(340px, 100%);
-    bottom: -18px;
     gap: 10px;
   }
 
@@ -1219,7 +1645,7 @@ main {
     min-height: 44px;
     gap: 14px;
     padding: 0 12px;
-    font-size: 8px;
+    font-size: var(--type-label-sm);
   }
 
   .hero-actions .hero-action .button04_inner {
@@ -1233,9 +1659,14 @@ main {
     height: 26px;
   }
 
-  .hero-role p:last-child,
-  .hero-role-index {
-    display: none;
+  .hero-identity {
+    gap: 0 10px;
+    font-size: var(--type-label-sm);
+    letter-spacing: 0.1em;
+  }
+
+  .hero-identity-role {
+    padding-left: 11px;
   }
 
   .hero-three-canvas {
@@ -1265,14 +1696,13 @@ main {
     position: relative;
   }
 
-  .hero-kicker {
+  .hero-identity {
     margin-bottom: 12px;
-    font-size: 10px;
   }
 
   .hero-beat h1,
   .hero-beat-statement {
-    font-size: clamp(42px, 14vw, 48px);
+    font-size: clamp(38px, 12.5vw, 48px);
   }
 
   .hero-support {
@@ -1290,6 +1720,12 @@ main {
   .hero-role,
   .hero-scroll-status {
     display: none;
+  }
+
+  /* The rail is gone at this size, so location moves into the identity block.
+     PRODUCT.md's scan path keeps it readable at every breakpoint. */
+  .hero-identity-location {
+    display: block;
   }
 }
 
@@ -1317,9 +1753,14 @@ main {
     width: calc(100% - 190px);
   }
 
-  .hero-kicker {
+  .hero-identity {
+    gap: 0 9px;
     margin-bottom: 8px;
-    font-size: 9px;
+    font-size: var(--type-label-sm);
+  }
+
+  .hero-identity-domains {
+    margin-top: 3px;
   }
 
   .hero-beat h1,
@@ -1328,11 +1769,12 @@ main {
     line-height: 0.8;
   }
 
+  /* Body copy, not a label — 11px put reading text under the floor even here. */
   .hero-support {
     width: min(360px, 100%);
     margin-top: 10px;
-    font-size: 11px;
-    line-height: 1.35;
+    font-size: 13px;
+    line-height: 1.42;
   }
 
   .hero-actions {
@@ -1355,6 +1797,12 @@ main {
   .hero-scroll-status {
     display: none;
   }
+
+  /* The rail is gone at this size, so location moves into the identity block.
+     PRODUCT.md's scan path keeps it readable at every breakpoint. */
+  .hero-identity-location {
+    display: block;
+  }
 }
 
 /* Preserve all three navigation controls at the 320px viewport floor. */
@@ -1374,7 +1822,7 @@ main {
   .nav-menu-trigger {
     gap: 5px;
     padding-inline: 2px;
-    font-size: 8px;
+    font-size: var(--type-label-sm);
   }
 
   .nav-menu-icon {
@@ -1410,7 +1858,7 @@ main {
     justify-self: center;
     gap: 5px;
     padding-inline: 2px;
-    font-size: 8px;
+    font-size: var(--type-label-sm);
   }
 }
 
@@ -1464,6 +1912,66 @@ main {
   scroll-margin-top: 82px;
 }
 
+/*
+ * The register shutter — the second actuation of the intro aperture, this one
+ * driven by scroll rather than by load.
+ *
+ * It occupies the chapter's own first viewport in normal flow, which is the
+ * whole trick: at the moment the chapter's top edge appears the blade is
+ * exactly as tall as the paper behind it, so the orange field above reads as
+ * continuing rather than as an overlay switching on. Own clipping keeps the
+ * retracted blade from reappearing further down the chapter, and the section's
+ * `z-index: 2` stacking context keeps all of it under the fixed site header.
+ */
+.register-shutter {
+  /* Hidden until the scrubbed timeline actually exists. An unarmed blade would
+     sit over the chapter's first viewport and hide the heading outright, which
+     is what happens under reduced motion or if the motion chunk never loads. */
+  display: none;
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 100svh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.register-shutter[data-armed="true"] {
+  display: block;
+}
+
+.register-shutter-blade {
+  position: absolute;
+  /* The extra pixel keeps a sub-pixel line of page from showing along the
+     leading edge on fractional device ratios, as the intro panels do. */
+  inset: -1px 0 0;
+  background: var(--brand);
+  will-change: transform;
+}
+
+/* The blade's leading edge, carrying the same ink hairline the intro seam
+   draws — here it is the moving edge of the shutter rather than a fixed
+   centre line, so the actuation has something to read against the paper. */
+.register-shutter-edge {
+  position: absolute;
+  /* Offsets the blade's 1px overshoot above, so the hairline lands exactly on
+     the chapter's top edge instead of being cut off by the shutter's clip. */
+  top: 1px;
+  right: clamp(20px, 3.4vw, 56px);
+  left: clamp(20px, 3.4vw, 56px);
+  height: 1px;
+  background: rgba(5, 5, 5, 0.22);
+}
+
+.register-shutter-edge > span {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform-origin: center;
+}
+
 .work-section::before {
   content: "";
   position: absolute;
@@ -1481,7 +1989,7 @@ main {
 
 .work-introduction {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(0, 7fr) minmax(280px, 3fr);
+  grid-template-columns: minmax(180px, 2fr) minmax(0, 7fr) minmax(330px, 3.4fr);
   gap: clamp(24px, 3vw, 52px);
   align-items: end;
   max-width: 1800px;
@@ -1494,11 +2002,11 @@ main {
   flex-direction: column;
   gap: 8px;
   margin: 12px 0 0;
-  color: #4d5555;
-  font-size: 11px;
+  color: var(--stone);
+  font-size: var(--type-label);
   font-weight: 700;
   line-height: 1.35;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -1515,17 +2023,28 @@ main {
   letter-spacing: -0.065em;
 }
 
-.work-heading-accent {
+.work-heading-animated {
   display: block;
-  color: var(--brand);
 }
 
+/*
+ * The Vibration Rule, enforced: #ff4f18 on the #f2efe8 paper ground measured
+ * 2.9:1 here, failing even the 3:1 large-text bar. Ember Deep is the documented
+ * light-register orange.
+ */
+.work-heading-accent {
+  display: block;
+  color: var(--ember-deep);
+}
+
+/* Held at 36ch by design; a column this tight needs less leading, not the
+   same 1.55 the 60ch columns run. */
 .work-intro {
   max-width: 36ch;
   margin: 0 0 4px;
   color: #42494a;
   font-size: clamp(16px, 1.25vw, 20px);
-  line-height: 1.55;
+  line-height: 1.48;
 }
 
 .project-stories {
@@ -1538,6 +2057,15 @@ main {
 .project-story {
   --project-accent: #ef5a2f;
   --project-deep: #0c3542;
+  /*
+   * The per-project counterpart to Ember Deep. `--project-accent` is tuned for
+   * fills and media on the dark project frame; on paper at label size it is the
+   * Vibration Rule's exact failure case — #ef5a2f measured 2.96:1 behind the
+   * project name, well under 4.5:1. This is the same hue carried to a value
+   * that reads as running text (5.6:1), so the accent keeps its job on fills
+   * and small type gets a colour it can actually be set in.
+   */
+  --project-accent-ink: #a83c1a;
   display: grid;
   grid-template-columns: 46px minmax(0, 7fr) minmax(340px, 4fr);
   gap: clamp(26px, 3.3vw, 62px);
@@ -1548,6 +2076,7 @@ main {
 .project-story-osteoplus {
   --project-accent: #d95e35;
   --project-deep: #183e43;
+  --project-accent-ink: #9a4426;
   grid-template-columns: 46px minmax(340px, 4fr) minmax(0, 7fr);
 }
 
@@ -1562,9 +2091,9 @@ main {
   min-height: 540px;
   padding: 10px 0;
   color: #626969;
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
   writing-mode: vertical-rl;
 }
@@ -1635,10 +2164,10 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -1652,7 +2181,7 @@ main {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 18px;
-  background: #ddd;
+  background: var(--paper);
   box-shadow: 0 26px 60px rgba(4, 14, 18, 0.3);
   will-change: transform;
 }
@@ -1695,10 +2224,10 @@ main {
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(17, 21, 22, 0.22);
   color: #596060;
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
   line-height: 1.3;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -1714,7 +2243,8 @@ main {
 .project-title span {
   display: block;
   margin-bottom: 12px;
-  color: var(--project-accent);
+  /* Label-scale text on paper — the ink variant, not the fill accent. */
+  color: var(--project-accent-ink);
   font-size: 0.3em;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -1722,11 +2252,11 @@ main {
 }
 
 .project-description {
-  max-width: 40ch;
+  max-width: 42ch;
   margin: 0;
-  color: #303738;
+  color: var(--slate);
   font-size: clamp(18px, 1.45vw, 23px);
-  line-height: 1.5;
+  line-height: 1.48;
 }
 
 .project-scene {
@@ -1740,19 +2270,19 @@ main {
   content: "Decision narrative";
   display: block;
   margin-bottom: 10px;
-  color: #7b4a3b;
-  font-size: 9px;
+  color: var(--ember-deep);
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
 .project-scene p {
-  max-width: 36ch;
+  max-width: 44ch;
   margin: 0;
   font-size: clamp(16px, 1.15vw, 19px);
   font-weight: 550;
-  line-height: 1.48;
+  line-height: 1.52;
 }
 
 .project-facts {
@@ -1776,16 +2306,16 @@ main {
 }
 
 .project-facts dt {
-  color: #777e7e;
-  font-size: 9px;
+  color: var(--stone);
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
 .project-facts dd {
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: clamp(13px, 0.19vw + 12.3px, 15px);
+  line-height: 1.5;
 }
 
 .project-proof {
@@ -1802,7 +2332,7 @@ main {
   border: 1px solid rgba(17, 21, 22, 0.2);
   border-radius: 999px;
   color: #434a4b;
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 650;
   line-height: 1;
   letter-spacing: 0.035em;
@@ -1826,7 +2356,7 @@ main {
   border-radius: 0;
   color: #111516;
   background: transparent;
-  font-size: 11px;
+  font-size: var(--type-label);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -1843,7 +2373,12 @@ main {
 
 .project-actions a:hover,
 .project-actions a:focus-visible {
-  color: #fff;
+  /*
+   * Ink, not white. DESIGN.md is explicit that ink is "the text color used on
+   * orange", and the measurement agrees: white on #ef5a2f is 3.4:1, which the
+   * label type here is far too small to qualify for. Ink is 7.0:1.
+   */
+  color: #050505;
   background: var(--project-accent);
   transform: translateY(-2px);
 }
@@ -1869,11 +2404,11 @@ main {
   margin: 0 0 clamp(28px, 3.4vw, 48px);
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(17, 21, 22, 0.22);
-  color: #4d5555;
-  font-size: 11px;
+  color: var(--stone);
+  font-size: var(--type-label);
   font-weight: 700;
   line-height: 1.35;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -2197,9 +2732,9 @@ main {
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
   color: rgba(255, 255, 255, 0.78);
-  font-size: 11px;
+  font-size: var(--type-label);
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -2212,6 +2747,7 @@ main {
   z-index: 3;
   top: 19%;
   left: clamp(20px, 3.4vw, 56px);
+  margin: 0;
   width: min(850px, 73vw);
   font-family: var(--font-syne), Arial, sans-serif;
   font-size: clamp(54px, 7.1vw, 124px);
@@ -2246,9 +2782,9 @@ main {
   align-items: center;
   gap: 13px;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
   pointer-events: none;
 }
@@ -2281,9 +2817,9 @@ main {
 }
 
 .about-cursor span {
-  font-size: 9px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -2345,9 +2881,9 @@ main {
   gap: 24px;
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.28);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.72);
 }
@@ -2528,7 +3064,7 @@ main {
 }
 
 .about-story-lead-line:last-child {
-  color: #ff6f32;
+  color: var(--brand);
 }
 
 .about-story-detail {
@@ -2596,9 +3132,9 @@ main {
 .about-story-card-index {
   align-self: flex-start;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -2623,9 +3159,9 @@ main {
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.24);
   color: rgba(255, 255, 255, 0.68);
-  font-size: 9px;
+  font-size: var(--type-label);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -2635,12 +3171,14 @@ main {
   font-style: normal;
 }
 
+/* A percentage is not a measure — it tracks the container, not the reading
+   line. Capped in ch so the column holds its width as the type scales. */
 .about-story-card-back p {
-  max-width: 95%;
+  max-width: 46ch;
   margin: 0;
   color: rgba(5, 5, 5, 0.86);
   font-size: clamp(15px, 1.16vw, 19px);
-  line-height: 1.52;
+  line-height: 1.55;
   letter-spacing: -0.015em;
 }
 
@@ -2675,9 +3213,9 @@ main {
   background: rgba(5, 5, 5, 0.34);
   box-shadow: inset 0 0 0 1px rgba(255, 79, 24, 0.08);
   backdrop-filter: blur(8px);
-  font-size: 10px;
+  font-size: var(--type-label-sm);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--label-track-sm);
   text-align: center;
   text-transform: uppercase;
   will-change: transform, opacity;
@@ -2689,10 +3227,15 @@ main {
   background: var(--ink);
 }
 
+/*
+ * `end` aligned the boxes, which with a 0.78 line-height on the heading left
+ * the intro floating ~10px shy of the heading's visual bottom. Aligning the
+ * two last baselines is what the eye was looking for.
+ */
 .expertise-heading {
   display: grid;
-  grid-template-columns: 1.25fr 0.75fr;
-  align-items: end;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: last baseline;
   gap: clamp(48px, 9vw, 150px);
   margin-bottom: clamp(72px, 8vw, 128px);
 }
@@ -2701,30 +3244,27 @@ main {
   margin: 0;
 }
 
-.expertise-heading > div > p {
-  margin-bottom: 18px;
-  color: var(--brand);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
 .expertise-heading h2 {
   margin: 0;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(64px, 9.6vw, 164px);
+  font-size: clamp(44px, 5.7vw, 100px);
   font-weight: 700;
+  overflow-wrap: anywhere;
   line-height: 0.78;
   letter-spacing: -0.065em;
   text-transform: uppercase;
 }
 
+/*
+ * A section lead, not body copy. It previously sat 8% off the cell copy below
+ * it — two different jobs at effectively one size. Lifting it opens a legible
+ * step and puts something in the 20px band that bridged nothing before.
+ */
 .expertise-intro {
-  max-width: 520px;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: clamp(15px, 1.25vw, 19px);
-  line-height: 1.55;
+  max-width: 48ch;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(16px, 0.42vw + 14.4px, 21px);
+  line-height: 1.5;
 }
 
 .expertise-list {
@@ -2734,14 +3274,21 @@ main {
   border-left: 1px solid rgba(255, 255, 255, 0.28);
 }
 
+/*
+ * Cell rhythm. This ran ~490px tall at 1440 for ~140px of content: a forced
+ * 148px middle row plus 36–64px of symmetric copy padding dumped the slack
+ * into two equal voids, one under the index and one above the rule. The slack
+ * now collects in a single place — the break between the copy group and the
+ * capability list — so the cell reads tight, then open, then closed.
+ */
 .expertise-row {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto minmax(148px, 1fr) auto;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   align-items: start;
   gap: 0 clamp(24px, 3vw, 48px);
-  min-height: clamp(390px, 34vw, 520px);
+  min-height: clamp(300px, 24vw, 404px);
   padding: clamp(30px, 3.2vw, 52px);
   overflow: hidden;
   isolation: isolate;
@@ -2779,9 +3326,9 @@ main {
   grid-column: 1;
   grid-row: 1;
   color: var(--brand);
-  font-size: 11px;
+  font-size: var(--type-label-sm);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   transition: color 400ms ease;
 }
 
@@ -2790,28 +3337,34 @@ main {
 }
 
 .expertise-row h3 {
-  margin: 0 0 22px;
+  margin: 0 0 18px;
   font-family: var(--font-syne), Arial, sans-serif;
   font-size: clamp(34px, 3.8vw, 62px);
   line-height: 0.9;
   letter-spacing: -0.045em;
   text-transform: uppercase;
+  /* Long single words ("RESEARCH", "SYSTEMS") must wrap, not leave the cell. */
+  overflow-wrap: anywhere;
 }
 
 .expertise-row-copy {
   grid-column: 1 / -1;
   grid-row: 2;
-  align-self: center;
-  padding: clamp(36px, 4vw, 64px) 0;
+  align-self: start;
+  /* Tight to the index above; the generous interval belongs below, where the
+     group actually breaks. */
+  padding: 12px 0 clamp(44px, 4.5vw, 80px);
   transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
 }
 
+/* Capped in ch, not px: at 520px this ran 70ch on a narrow viewport and 62ch
+   on a wide one, because the px cap does not move with the clamped size. */
 .expertise-row-copy > p {
-  max-width: 520px;
+  max-width: 58ch;
   margin: 0;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.66);
   font-size: clamp(14px, 1.15vw, 17px);
-  line-height: 1.6;
+  line-height: 1.62;
   transition: color 400ms ease;
 }
 
@@ -2827,14 +3380,14 @@ main {
   grid-column: 1 / -1;
   grid-row: 3;
   display: grid;
-  gap: 13px;
+  gap: 11px;
   margin: 0;
-  padding: 24px 0 0;
+  padding: 22px 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
   list-style: none;
   color: rgba(255, 255, 255, 0.74);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: clamp(13px, 0.14vw + 12.5px, 15px);
+  line-height: 1.4;
   transition:
     color 400ms ease,
     border-color 400ms ease,
@@ -2855,19 +3408,6 @@ main {
 .expertise-row:hover ul {
   border-color: rgba(5, 5, 5, 0.24);
   transform: translateY(-5px);
-}
-
-.expertise-arrow {
-  grid-column: 3;
-  grid-row: 1;
-  justify-self: end;
-  font-size: 26px;
-  line-height: 1;
-  transition: transform 400ms cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.expertise-row:hover .expertise-arrow {
-  transform: rotate(45deg);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2925,7 +3465,7 @@ main {
   .about-signals span {
     min-height: 38px;
     padding: 7px 9px;
-    font-size: 9px;
+    font-size: var(--type-label-sm);
   }
 }
 
@@ -3065,8 +3605,11 @@ main {
     font-size: clamp(44px, 14vw, 68px);
   }
 
+  /* "DISCIPLINES." rendered 360px wide inside a 335px column at 375px — the
+     word left the viewport. Sized so the longest word fits, with the same
+     wrap backstop the hero carries. */
   .expertise-heading h2 {
-    font-size: clamp(44px, 14.2vw, 58px);
+    font-size: clamp(40px, 12.7vw, 58px);
   }
 
   .expertise-row {
@@ -3075,20 +3618,18 @@ main {
   }
 
   .expertise-row-copy > p {
-    font-size: 13px;
+    font-size: 14px;
   }
 
+  /* Same cadence as the desktop cell: tight under the index, open before the
+     rule. 34px above put the index adrift from the title it belongs to. */
   .expertise-row-copy {
-    padding: 34px 0 40px;
+    padding: 10px 0 36px;
   }
 
   .expertise-row ul {
     gap: 9px;
-    font-size: 12px;
-  }
-
-  .expertise-arrow {
-    font-size: 20px;
+    font-size: 13px;
   }
 }
 
@@ -3118,8 +3659,488 @@ main {
   }
 
   .expertise-row,
-  .expertise-row::before,
-  .expertise-arrow {
+  .expertise-row::before {
     transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   Resilience
+   The page as it behaves when something is missing: the motion chunk, the
+   scripting engine, colour itself, or the screen. Nothing below is a degraded
+   afterthought — each is the composition that has to carry the argument alone.
+   ========================================================================== */
+
+/*
+ * Intro failsafe, CSS side.
+ *
+ * The loader is a fixed, full-viewport orange panel rendered on the server. If
+ * React never hydrates — a chunk that 404s after a deploy, a proxy that strips
+ * the bundle, an extension that throws first — nothing in JavaScript ever runs
+ * to take it down, and the entire portfolio sits behind it. This dismisses it
+ * without help. The class the loader adds the moment it takes control cancels
+ * the animation, so the real sequence is never cut short.
+ */
+@keyframes intro-loader-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.intro-loader {
+  animation: intro-loader-failsafe 300ms linear 7s forwards;
+}
+
+html.is-loading .intro-loader {
+  animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   Forced colours
+   Windows high contrast and similar modes discard authored colour. Anything
+   built from a background — the masked wordmark, the dot-grid arrow, the
+   status markers — disappears entirely rather than losing its hue.
+   -------------------------------------------------------------------------- */
+
+@media (forced-colors: active) {
+  /* Buttons are colour-only: an orange fill with no border. Forced colours
+     strip the fill and leave floating text, so they earn a real edge. */
+  .button04,
+  .skip-link {
+    border: 1px solid ButtonText;
+    forced-color-adjust: none;
+    color: ButtonText;
+    background: ButtonFace;
+  }
+
+  .button04:hover,
+  .button04:focus-visible,
+  .skip-link:focus-visible {
+    color: HighlightText;
+    background: Highlight;
+  }
+
+  /* The arrow glyph is 35 background-painted dots. Preserve them explicitly. */
+  .button04_dot {
+    forced-color-adjust: none;
+    background: ButtonText;
+  }
+
+  .button04:hover .button04_dot,
+  .button04:focus-visible .button04_dot {
+    background: HighlightText;
+  }
+
+  /* Both wordmarks are SVG masks over a background colour; the mask survives
+     but the paint does not. `forced-color-adjust: none` keeps them visible. */
+  .intro-wordmark {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .hero-wordmark,
+  .menu-wordmark {
+    forced-color-adjust: none;
+  }
+
+  /* Markers and rules that carry meaning rather than decoration. */
+  .hero-availability-dot,
+  .menu-meta-signals p > span:first-child,
+  .menu-link-marker,
+  .hero-progress-track span {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  /* Hairlines at 24% alpha resolve to nothing. Give every divider a real one. */
+  .hero-nav,
+  .menu-meta-resume a,
+  .project-story,
+  .expertise-row {
+    border-color: CanvasText;
+  }
+
+  /* Scrims, grain, and the atmospheric fields are pure decoration and only add
+     noise once the palette is replaced. */
+  .hero-scrim,
+  .hero-grain,
+  .hero-three-canvas,
+  .about-image-shade,
+  .about-depth-field,
+  .menu-preview-scan {
+    display: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Print
+   A recruiter forwarding this page prints it or saves it to PDF. What has to
+   survive is the evidence: who this is, what the work was, and how to reply.
+   The cinema does not survive, and should not try to.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  html,
+  body {
+    height: auto;
+    color: #111516;
+    background: #ffffff;
+  }
+
+  html.is-loading,
+  html.is-loading body,
+  html.menu-open,
+  html.menu-open body {
+    overflow: visible;
+  }
+
+  /* Nothing pinned: sticky stages print as one repeated frame per page. */
+  .hero-sequence,
+  .about-understory,
+  .hero-stage,
+  .about-understory-stage,
+  .about-portrait {
+    position: static;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .hero-copy-grid {
+    position: static;
+    display: block;
+    padding: 0 0 24pt;
+  }
+
+  .hero-beats,
+  .hero-beat {
+    position: static;
+    min-height: 0;
+  }
+
+  .hero-beat-statement {
+    display: none;
+  }
+
+  /* Canvases print as blank rectangles or as ink-heavy photographs. Neither is
+     worth a page; the decorative chrome goes with them. */
+  .intro-loader,
+  .portfolio-menu,
+  .hero-nav,
+  .skip-link,
+  .hero-frame-layer,
+  .hero-three-canvas,
+  .hero-scrim,
+  .hero-grain,
+  .hero-scroll-status,
+  .about-liquid-canvas,
+  .about-background-canvas,
+  .about-image-shade,
+  .about-depth-field,
+  .about-reveal-hint,
+  .about-cursor,
+  .site-pointer,
+  .about-depth-label,
+  .work-tools,
+  .project-detail-image,
+  .button04_bg,
+  .button04_icon-wrap,
+  [class*="signature"] {
+    display: none !important;
+  }
+
+  /* The arrow button is a fixed-height flex shell built for a hover swap. On
+     paper it has to be a line of text that can carry its own URL. */
+  .button04 {
+    display: inline;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    color: #111516 !important;
+    background: none !important;
+    border: 0;
+  }
+
+  .button04_inner {
+    display: inline;
+  }
+
+  /* Dark-register type on white paper. */
+  .hero-beat h1,
+  .hero-identity-name,
+  .about-story-lead,
+  .work-heading,
+  h1,
+  h2,
+  h3 {
+    color: #111516 !important;
+    text-shadow: none !important;
+  }
+
+  .hero-identity-role,
+  .hero-beat h1 span:nth-child(2),
+  .about-story-lead-line:last-child {
+    color: #9d3d21 !important;
+  }
+
+  .hero-support,
+  .hero-identity-domains,
+  .hero-identity-location,
+  .hero-identity-availability,
+  .hero-role,
+  .about-story-card-back p {
+    color: #42494a !important;
+  }
+
+  /* Display type at screen scale burns a page per heading. */
+  .hero-beat h1 {
+    font-size: 34pt;
+  }
+
+  .about-story-lead,
+  .work-heading {
+    font-size: 26pt;
+  }
+
+  /* The card flip has no meaning on paper — show the written side flat. */
+  .about-story-card,
+  .about-story-card-inner,
+  .about-story-card-face {
+    position: static;
+    min-height: 0;
+    transform: none !important;
+    backface-visibility: visible;
+  }
+
+  .about-story-card-front {
+    display: none;
+  }
+
+  .about-story-card-back {
+    color: #111516;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Off-site destinations are the point of the Work chapter, and a printed
+     page cannot be clicked. Print the address next to the label. */
+  .project-actions a::after,
+  .menu-meta-resume a::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    word-break: break-all;
+  }
+
+  .project-story,
+  .contact-section,
+  section {
+    break-inside: auto;
+  }
+
+  .project-story {
+    break-before: page;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * The site pointer — a focus reticle
+ * ---------------------------------------------------------------------------
+ * Three parts, because a cursor has two jobs that pull against each other. The
+ * dot is exact and never lags, so clicking stays precise. The ring trails it,
+ * which is the part the eye actually follows across a dark page. The frame is
+ * the viewfinder: it snaps open only over things that do something, so the page
+ * answers "is this clickable" before the click.
+ *
+ * Brand orange throughout, and deliberately so — it reads on the ink ground,
+ * on the paper register, and on the frame sequences, and it makes the pointer
+ * part of the same object as the buttons rather than a borrowed effect.
+ *
+ * `cursor: none` is applied by the attribute the component sets on mount, so a
+ * page that never runs the script keeps its native pointer.
+ */
+/* Nothing at all on a touch device: the markup ships, but it takes no space
+   and paints nothing until a fine pointer is present to track. */
+.site-pointer {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-site-pointer="on"],
+  html[data-site-pointer="on"] * {
+    cursor: none;
+  }
+
+  /* The About portrait swaps in a lens of its own and marks itself
+     `data-pointer="hidden"`; two custom cursors at once is one too many. */
+  .site-pointer {
+    position: fixed;
+    z-index: 200;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+
+  .site-pointer[data-visible] {
+    opacity: 1;
+  }
+
+  .site-pointer[data-state="hidden"] {
+    opacity: 0;
+  }
+
+  .site-pointer-dot,
+  .site-pointer-follow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    will-change: transform;
+  }
+
+  .site-pointer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+    /* A hairline of ink so the dot still separates from the orange-heavy
+       About frames and the Work paper ground. */
+    box-shadow: 0 0 0 1px rgba(5, 5, 5, 0.38);
+    transition:
+      width 260ms cubic-bezier(0.76, 0, 0.24, 1),
+      height 260ms cubic-bezier(0.76, 0, 0.24, 1),
+      border-radius 260ms cubic-bezier(0.76, 0, 0.24, 1),
+      background-color 220ms ease;
+  }
+
+  .site-pointer-ring,
+  .site-pointer-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    transition:
+      opacity 220ms ease,
+      transform 320ms cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  .site-pointer-ring {
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 1px solid rgba(255, 79, 24, 0.72);
+    border-radius: 50%;
+  }
+
+  .site-pointer-frame {
+    width: 46px;
+    height: 46px;
+    margin: -23px 0 0 -23px;
+    opacity: 0;
+    transform: scale(0.62);
+  }
+
+  .site-pointer-frame i {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--brand);
+  }
+
+  .site-pointer-frame i:nth-child(1) {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .site-pointer-frame i:nth-child(2) {
+    top: 0;
+    right: 0;
+    border-bottom: 0;
+    border-left: 0;
+  }
+
+  .site-pointer-frame i:nth-child(3) {
+    right: 0;
+    bottom: 0;
+    border-top: 0;
+    border-left: 0;
+  }
+
+  .site-pointer-frame i:nth-child(4) {
+    bottom: 0;
+    left: 0;
+    border-top: 0;
+    border-right: 0;
+  }
+
+  /* Interactive: the ring opens out and hands over to the viewfinder, and the
+     dot drops to a white pip so the orange frame carries the signal alone. */
+  .site-pointer[data-state="interactive"] .site-pointer-ring {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+
+  .site-pointer[data-state="interactive"] .site-pointer-frame {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .site-pointer[data-state="interactive"] .site-pointer-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--white);
+  }
+
+  /* Text: the reticle collapses to a caret. Losing the I-beam on a page whose
+     email address is meant to be selected would be a real cost. */
+  .site-pointer[data-state="text"] .site-pointer-ring {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  /* Square, per the zero-radius rule — the caret is a hard edge like every
+     other mark this system draws. */
+  .site-pointer[data-state="text"] .site-pointer-dot {
+    width: 2px;
+    height: 22px;
+    border-radius: 0;
+  }
+
+  /* Shutter press. */
+  .site-pointer[data-pressed] .site-pointer-frame {
+    transform: scale(0.84);
+  }
+
+  .site-pointer[data-pressed] .site-pointer-ring {
+    transform: scale(0.78);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-pointer,
+    .site-pointer-dot,
+    .site-pointer-ring,
+    .site-pointer-frame {
+      transition-duration: 0.01ms !important;
+    }
   }
 }

@@ -3,18 +3,37 @@ export const portfolioContent = {
     name: "Edgar Bonilla G.",
     role: "UI/UX Designer",
     domains: "Health · Wellness · Fitness · Endurance",
-    location: "Costa Rica · Remote",
+    location: "Costa Rica · Remote worldwide",
+    /*
+     * The single most decision-relevant fact for the visitor this page is for,
+     * and it previously appeared only in the menu overlay and at the very
+     * bottom of Contact — past the whole scroll sequence. Same claim as
+     * `contact.availability[0]`; keep the two in step.
+     */
+    availability: "Open to full-time roles",
     headline: ["Designing", "clarity", "into motion."],
-    statement: ["Complex systems.", "Clear experiences."],
     close: ["Built for people", "in motion."],
     support:
       "Accessible digital products shaped with systems thinking, visual precision, and a bias for momentum.",
+  },
+  /*
+   * Shown at the moment of decision. Every line here is already true elsewhere
+   * on the site or in PRODUCT.md — no response-time promise, because none is
+   * known. Do not add one.
+   */
+  contact: {
+    availability: [
+      { label: "Seeking", value: "Full-time UI/UX roles" },
+      { label: "Location", value: "Zarcero, Costa Rica · remote worldwide" },
+      { label: "Hours", value: "UTC−6, no daylight saving" },
+      { label: "Languages", value: "English / Español" },
+    ],
   },
   about: {
     lead: "I turn complex systems into clear, usable momentum.",
     leadLines: ["I turn", "complex", "systems into", "clear, usable", "momentum."],
     paragraphs: [
-      "I’m Edgar Bonilla, a senior UI/UX designer focused on health, wellness, fitness, and endurance—spaces where confusing flows and inaccessible details carry real consequences. I connect research, interface design, and systems thinking to move teams from ambiguity to confident decisions.",
+      "I’m Edgar Bonilla, a UI/UX designer focused on health, wellness, fitness, and endurance—spaces where confusing flows and inaccessible details carry real consequences. I connect research, interface design, and systems thinking to move teams from ambiguity to confident decisions.",
       "Accessibility is built in from the first sketch, not saved for the audit. I work in English and Spanish, collaborate remotely across disciplines, and use AI-assisted workflows with human review to accelerate the work without lowering the bar.",
     ],
     signals: ["WCAG 2.2 AA mindset", "English / Spanish", "Remote-ready", "End-to-end practice"],
