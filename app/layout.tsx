@@ -5,7 +5,7 @@ import "lenis/dist/lenis.css";
 import "./globals.css";
 // Inlined rather than linked: a <noscript> stylesheet has to be present in the
 // first response, and there is no request to spend on it.
-import noScriptCss from "./no-script.css?raw";
+import { NO_SCRIPT_STYLES } from "./no-script-styles";
 
 /*
  * The page has one register and it is near-black. Declaring it stops mobile
@@ -18,13 +18,6 @@ import noScriptCss from "./no-script.css?raw";
  * `env(safe-area-inset-*)` padding on the fixed header and the hero rails,
  * which this layout does not use.
  */
-/*
- * The source file's comments explain the rules to the next reader; they do not
- * need to travel in every response, and stripping them also keeps angle
- * brackets out of an inline style element.
- */
-const NO_SCRIPT_STYLES = noScriptCss.replace(/\/\*[\s\S]*?\*\//g, "").trim();
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
