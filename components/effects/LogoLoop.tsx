@@ -130,6 +130,7 @@ function useImageLoader(
 
 function useAnimationLoop(
   trackRef: RefObject<HTMLDivElement | null>,
+  containerRef: RefObject<HTMLDivElement | null>,
   targetVelocity: number,
   seqWidth: number,
   seqHeight: number,
@@ -141,12 +142,15 @@ function useAnimationLoop(
   const lastTimestampRef = useRef<number | null>(null);
   const offsetRef = useRef(0);
   const velocityRef = useRef(0);
+  const isVisibleRef = useRef(false);
 
   useEffect(() => {
     const track = trackRef.current;
+    const container = containerRef.current;
     if (!track) return;
 
     const seqSize = isVertical ? seqHeight : seqWidth;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (seqSize > 0) {
       offsetRef.current = ((offsetRef.current % seqSize) + seqSize) % seqSize;
@@ -155,7 +159,22 @@ function useAnimationLoop(
         : `translate3d(${-offsetRef.current}px, 0, 0)`;
     }
 
+    if (reducedMotion) return;
+
+    const stop = () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      lastTimestampRef.current = null;
+    };
+
     const animate = (timestamp: number) => {
+      if (!isVisibleRef.current) {
+        stop();
+        return;
+      }
+
       if (lastTimestampRef.current === null) {
         lastTimestampRef.current = timestamp;
       }
@@ -181,16 +200,43 @@ function useAnimationLoop(
       rafRef.current = window.requestAnimationFrame(animate);
     };
 
-    rafRef.current = window.requestAnimationFrame(animate);
+    const start = () => {
+      if (rafRef.current !== null || !isVisibleRef.current) return;
+      rafRef.current = window.requestAnimationFrame(animate);
+    };
+
+    const visibilityObserver =
+      container &&
+      new IntersectionObserver(
+        ([entry]) => {
+          isVisibleRef.current = entry.isIntersecting;
+          if (entry.isIntersecting) start();
+          else stop();
+        },
+        { rootMargin: "12% 0px", threshold: 0 },
+      );
+
+    if (container && visibilityObserver) {
+      visibilityObserver.observe(container);
+    } else {
+      isVisibleRef.current = true;
+      start();
+    }
 
     return () => {
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      lastTimestampRef.current = null;
+      visibilityObserver?.disconnect();
+      stop();
     };
-  }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical, trackRef]);
+  }, [
+    targetVelocity,
+    seqWidth,
+    seqHeight,
+    isHovered,
+    hoverSpeed,
+    isVertical,
+    trackRef,
+    containerRef,
+  ]);
 }
 
 export const LogoLoop = memo(function LogoLoop({
@@ -272,7 +318,16 @@ export const LogoLoop = memo(function LogoLoop({
 
   useImageLoader(seqRef, updateDimensions, [logos, gap, logoHeight, isVertical]);
 
-  useAnimationLoop(trackRef, targetVelocity, seqWidth, seqHeight, isHovered, effectiveHoverSpeed, isVertical);
+  useAnimationLoop(
+    trackRef,
+    containerRef,
+    targetVelocity,
+    seqWidth,
+    seqHeight,
+    isHovered,
+    effectiveHoverSpeed,
+    isVertical,
+  );
 
   const cssVariables = useMemo(
     () =>

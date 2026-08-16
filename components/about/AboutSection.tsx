@@ -3,6 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { portfolioContent } from "@/lib/portfolio-content";
 import { useGsapClient } from "@/lib/use-gsap-client";
+import {
+  rubberbandIfOutOfBounds,
+  rubberbandedUnit,
+  Spring,
+  Spring2D,
+  tickerDt,
+  unboundedProgress,
+  VelocityTracker,
+} from "@/lib/fluid-motion";
 import { DecryptedText, type DecryptedTextHandle } from "@/components/effects/DecryptedText";
 
 const ABOUT_BACKGROUND_FRAME_COUNT = 80;
@@ -93,12 +102,17 @@ export function AboutSection() {
       targetStrength: 0,
       velocity: 0,
     };
+    const pointerSpring = new Spring2D(1, 0.35);
+    const strengthSpring = new Spring(0, 1, 0.3);
+    const pointerVelocity = new VelocityTracker();
+    pointerSpring.setImmediate(state.x, state.y);
+    let pointerCaptured = false;
+    let pointerOver = false;
 
     let dpr = 1;
     let rafId = 0;
     let isDestroyed = false;
-    let lastPointer = { x: state.x, y: state.y };
-    let touchReleaseTimer = 0;
+    let lastRenderTime = 0;
     let removeUnderstoryPointer = () => undefined;
 
     const resize = () => {
@@ -161,9 +175,23 @@ export function AboutSection() {
       if (isDestroyed) return;
       const time = timestamp * 0.001;
       const liquidTime = reducedMotion ? 0 : time;
-      state.x += (state.targetX - state.x) * 0.12;
-      state.y += (state.targetY - state.y) * 0.12;
-      state.strength += (state.targetStrength - state.strength) * 0.09;
+      const dt =
+        lastRenderTime === 0
+          ? 1 / 60
+          : Math.min(1 / 30, Math.max(0.001, (timestamp - lastRenderTime) / 1000));
+      lastRenderTime = timestamp;
+
+      if (pointerCaptured || pointerOver) {
+        pointerSpring.setImmediate(state.targetX, state.targetY);
+      } else {
+        pointerSpring.step(dt);
+      }
+      strengthSpring.target = state.targetStrength;
+      strengthSpring.step(dt);
+
+      state.x = pointerSpring.x.value;
+      state.y = pointerSpring.y.value;
+      state.strength = strengthSpring.value;
       state.velocity *= 0.9;
 
       if (orangePortrait.complete && orangePortrait.naturalWidth > 0) {
@@ -224,57 +252,87 @@ export function AboutSection() {
 
     const setPointer = (event: PointerEvent) => {
       const rect = portrait.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      state.velocity = Math.min(48, Math.hypot(x - lastPointer.x, y - lastPointer.y));
+      const x = rubberbandIfOutOfBounds(event.clientX - rect.left, 0, rect.width);
+      const y = rubberbandIfOutOfBounds(event.clientY - rect.top, 0, rect.height);
+      pointerVelocity.add(x, y);
+      const velocity = pointerVelocity.velocity();
+      state.velocity = Math.min(48, Math.hypot(velocity.x, velocity.y) / 24);
       state.targetX = x;
       state.targetY = y;
-      lastPointer = { x, y };
     };
 
     const onPointerEnter = (event: PointerEvent) => {
+      pointerOver = true;
       setPointer(event);
       state.targetStrength = reducedMotion ? 0.72 : 1;
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      pointerOver = true;
       setPointer(event);
       if (event.pointerType !== "touch") state.targetStrength = reducedMotion ? 0.72 : 1;
     };
 
     const onPointerLeave = () => {
+      pointerOver = false;
+      if (pointerCaptured) return;
+      const velocity = pointerVelocity.velocity();
+      pointerSpring.dampingRatio = Math.hypot(velocity.x, velocity.y) > 400 ? 0.8 : 1;
+      pointerSpring.setVelocity(velocity.x, velocity.y);
+      pointerVelocity.reset();
       state.targetStrength = 0;
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      window.clearTimeout(touchReleaseTimer);
+      pointerCaptured = true;
+      pointerOver = true;
+      portrait.setPointerCapture(event.pointerId);
       setPointer(event);
       state.targetStrength = 1;
     };
 
-    const onPointerUp = () => {
-      touchReleaseTimer = window.setTimeout(() => {
-        state.targetStrength = 0;
-      }, 720);
+    const onPointerUp = (event: PointerEvent) => {
+      pointerCaptured = false;
+      if (portrait.hasPointerCapture(event.pointerId)) {
+        portrait.releasePointerCapture(event.pointerId);
+      }
+      const rect = portrait.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      pointerOver = inside;
+      if (!inside) {
+        const velocity = pointerVelocity.velocity();
+        pointerSpring.dampingRatio = Math.hypot(velocity.x, velocity.y) > 400 ? 0.8 : 1;
+        pointerSpring.setVelocity(velocity.x, velocity.y);
+        pointerVelocity.reset();
+      }
+      state.targetStrength = inside && event.pointerType !== "touch" ? 1 : 0;
     };
 
-    orangePortrait.onload = () => {
-      if (isDestroyed) return;
+    let resizeObserver: ResizeObserver | undefined;
+
+    if (!reducedMotion) {
+      orangePortrait.onload = () => {
+        if (isDestroyed) return;
+        resize();
+        setCanvasReady(true);
+      };
+      if (orangePortrait.complete) orangePortrait.onload(new Event("load"));
+
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(portrait);
+      portrait.addEventListener("pointerenter", onPointerEnter);
+      portrait.addEventListener("pointermove", onPointerMove, { passive: true });
+      portrait.addEventListener("pointerleave", onPointerLeave);
+      portrait.addEventListener("pointerdown", onPointerDown);
+      portrait.addEventListener("pointerup", onPointerUp);
+      portrait.addEventListener("pointercancel", onPointerUp);
       resize();
-      setCanvasReady(true);
-    };
-    if (orangePortrait.complete) orangePortrait.onload(new Event("load"));
-
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(portrait);
-    portrait.addEventListener("pointerenter", onPointerEnter);
-    portrait.addEventListener("pointermove", onPointerMove, { passive: true });
-    portrait.addEventListener("pointerleave", onPointerLeave);
-    portrait.addEventListener("pointerdown", onPointerDown);
-    portrait.addEventListener("pointerup", onPointerUp);
-    portrait.addEventListener("pointercancel", onPointerUp);
-    resize();
-    rafId = window.requestAnimationFrame(render);
+      rafId = window.requestAnimationFrame(render);
+    }
 
     const backgroundContext = backgroundCanvas.getContext("2d", { alpha: false });
     const backgroundFrames: Array<HTMLImageElement | undefined> = new Array(
@@ -473,66 +531,104 @@ export function AboutSection() {
       if (reducedMotion) return;
 
       if (finePointer) {
-        const lensX = gsap.quickTo(depthLens, "x", {
-          duration: 0.85,
-          ease: "power3.out",
-        });
-        const lensY = gsap.quickTo(depthLens, "y", {
-          duration: 0.85,
-          ease: "power3.out",
-        });
-        const storyRotationX = gsap.quickTo(story, "rotationX", {
-          duration: 0.9,
-          ease: "power3.out",
-        });
-        const storyRotationY = gsap.quickTo(story, "rotationY", {
-          duration: 0.9,
-          ease: "power3.out",
-        });
+        const lensSpring = new Spring2D(1, 0.32);
+        const lensAlphaSpring = new Spring(0.28, 1, 0.3);
+        const storySpring = new Spring2D(1, 0.35);
+        const lensVelocity = new VelocityTracker();
+        let lensOver = false;
+        let stageWidth = understoryStage.clientWidth || 1;
+        let stageHeight = understoryStage.clientHeight || 1;
+
+        const paintLensAndStory = () => {
+          gsap.set(depthLens, {
+            x: lensSpring.x.value,
+            y: lensSpring.y.value,
+            autoAlpha: lensAlphaSpring.value,
+          });
+          gsap.set(story, {
+            rotationX: storySpring.x.value,
+            rotationY: storySpring.y.value,
+          });
+        };
+
+        const applyLens = (event: PointerEvent) => {
+          const rect = understoryStage.getBoundingClientRect();
+          stageWidth = Math.max(1, rect.width);
+          stageHeight = Math.max(1, rect.height);
+          const x = rubberbandIfOutOfBounds(event.clientX - rect.left, 0, rect.width);
+          const y = rubberbandIfOutOfBounds(event.clientY - rect.top, 0, rect.height);
+          const normalizedX = x / stageWidth - 0.5;
+          const normalizedY = y / stageHeight - 0.5;
+          const lensX = x - 260;
+          const lensY = y - 260;
+          lensVelocity.add(lensX, lensY);
+          lensSpring.setImmediate(lensX, lensY);
+          lensAlphaSpring.setImmediate(0.72);
+          storySpring.setImmediate(normalizedY * -1.5, normalizedX * 1.8);
+          paintLensAndStory();
+        };
+
+        const restLens = () => {
+          lensOver = false;
+          const velocity = lensVelocity.velocity();
+          const speed = Math.hypot(velocity.x, velocity.y);
+          const withMomentum = speed > 600;
+          lensSpring.dampingRatio = withMomentum ? 0.8 : 1;
+          storySpring.dampingRatio = withMomentum ? 0.8 : 1;
+          /* Position target stays at the live value so the lens coasts from
+             release velocity instead of snapping home. Opacity and tilt spring
+             from their presentation values toward rest. */
+          lensSpring.setVelocity(velocity.x, velocity.y);
+          lensAlphaSpring.target = 0.28;
+          storySpring.setTarget(0, 0);
+          storySpring.setVelocity(
+            (velocity.y * -1.5) / stageHeight,
+            (velocity.x * 1.8) / stageWidth,
+          );
+          lensVelocity.reset();
+        };
 
         const onUnderstoryPointerMove = (event: PointerEvent) => {
-          const rect = understoryStage.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          const normalizedX = x / rect.width - 0.5;
-          const normalizedY = y / rect.height - 0.5;
-
-          lensX(x - 260);
-          lensY(y - 260);
-          storyRotationX(normalizedY * -1.5);
-          storyRotationY(normalizedX * 1.8);
-          gsap.to(depthLens, { autoAlpha: 0.72, duration: 0.18, overwrite: true });
+          lensOver = true;
+          applyLens(event);
         };
 
         const onUnderstoryPointerLeave = () => {
-          storyRotationX(0);
-          storyRotationY(0);
-          gsap.to(depthLens, {
-            autoAlpha: 0.28,
-            duration: 0.45,
-            ease: "power2.out",
-            overwrite: true,
-          });
+          restLens();
         };
+
+        const tickLens = () => {
+          if (lensOver) return;
+          const dt = tickerDt(gsap.ticker);
+          lensSpring.step(dt);
+          lensAlphaSpring.step(dt);
+          storySpring.step(dt);
+          paintLensAndStory();
+        };
+        gsap.ticker.add(tickLens);
+        paintLensAndStory();
 
         understoryStage.addEventListener("pointermove", onUnderstoryPointerMove, {
           passive: true,
         });
         understoryStage.addEventListener("pointerleave", onUnderstoryPointerLeave);
         removeUnderstoryPointer = () => {
+          gsap.ticker.remove(tickLens);
           understoryStage.removeEventListener("pointermove", onUnderstoryPointerMove);
           understoryStage.removeEventListener("pointerleave", onUnderstoryPointerLeave);
         };
       }
 
-      gsap.from(".about-title-line > span", {
-        yPercent: 108,
-        duration: 1.15,
-        stagger: 0.12,
-        ease: "power4.out",
+      gsap.set(".about-title-line > span", { yPercent: 108 });
+      gsap.to(".about-title-line > span", {
+        yPercent: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        ease: "power3.out",
         scrollTrigger: {
           trigger: ".about-portrait",
           start: "top 72%",
+          toggleActions: "play none none reverse",
         },
       });
 
@@ -616,20 +712,29 @@ export function AboutSection() {
           );
       };
 
-      motionMedia.add("(min-width: 901px)", () => {
+      // Kept in em to match the stylesheet. These two queries gate the desktop
+      // and compact builds of the same section, so if one anchor moves with the
+      // reader's text size and the other does not, a large-text reader gets the
+      // desktop scroll choreography driving the compact layout.
+      motionMedia.add("(min-width: 56.3125em)", () => {
         const depthTimeline = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
             trigger: understory,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.55,
+            scrub: 0.2,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
-              const progress = Math.round(self.progress * 100);
-              depthProgressValue.textContent = String(progress).padStart(2, "0");
-              gsap.set(depthProgress, { scaleY: self.progress });
-              requestBackgroundFrame(self.progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
+              const range = Math.max(1, self.end - self.start);
+              const progress = rubberbandedUnit(
+                unboundedProgress(self.scroll(), self.start, self.end),
+                range,
+              );
+              const clamped = Math.max(0, Math.min(1, progress));
+              depthProgressValue.textContent = String(Math.round(clamped * 100)).padStart(2, "0");
+              gsap.set(depthProgress, { scaleY: clamped });
+              requestBackgroundFrame(progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
             },
           },
         });
@@ -670,6 +775,9 @@ export function AboutSection() {
           end: "bottom 40%",
           invalidateOnRefresh: true,
           onUpdate: (self) => {
+            /* progress 0 leaves the depth timeline sole owner. As progress
+               approaches 0, rotationY is already at 180, so handing off without
+               an onLeaveBack snap keeps the live presentation value. */
             if (self.progress <= 0) return;
             storyCardInners.forEach((inner, index) => {
               const flipBack = cardFlipBackProgress(self.progress, index);
@@ -683,23 +791,25 @@ export function AboutSection() {
               else if (self.direction < 0) triggerCardDecrypt(index);
             });
           },
-          onLeaveBack: () => {
-            storyCardInners.forEach((inner) => gsap.set(inner, { rotationY: 180 }));
-          },
         });
       });
 
-      motionMedia.add("(max-width: 900px)", () => {
+      motionMedia.add("(max-width: 56.25em)", () => {
         const mobileBackgroundTrigger = ScrollTrigger.create({
           trigger: understory,
           start: "top bottom",
           end: "bottom top",
           invalidateOnRefresh: true,
           onUpdate: (self) => {
-            requestBackgroundFrame(self.progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
+            const range = Math.max(1, self.end - self.start);
+            const progress = rubberbandedUnit(
+              unboundedProgress(self.scroll(), self.start, self.end),
+              range,
+            );
+            requestBackgroundFrame(progress * (ABOUT_BACKGROUND_FRAME_COUNT - 1));
             gsap.set(backgroundCanvas, {
-              scale: 1.08 - self.progress * 0.045,
-              yPercent: (self.progress - 0.5) * -2.4,
+              scale: 1.08 - Math.max(0, Math.min(1, progress)) * 0.045,
+              yPercent: (Math.max(0, Math.min(1, progress)) - 0.5) * -2.4,
             });
           },
         });
@@ -711,7 +821,7 @@ export function AboutSection() {
               trigger: ".about-story-lead",
               start: "top 88%",
               end: "bottom 42%",
-              scrub: 0.4,
+              scrub: 0.2,
             },
           })
           .fromTo(
@@ -747,7 +857,7 @@ export function AboutSection() {
                 trigger: card,
                 start: "top 90%",
                 end: "top 72%",
-                scrub: 0.35,
+                scrub: 0.2,
               },
             },
           );
@@ -765,7 +875,7 @@ export function AboutSection() {
                 trigger: card,
                 start: "top 72%",
                 end: "bottom top",
-                scrub: 0.45,
+                scrub: 0.22,
                 onUpdate: (self) => {
                   if (self.progress >= 0.74) resetCardDecrypt(cardIndex);
                   else if (self.progress >= 0.18) triggerCardDecrypt(cardIndex);
@@ -799,7 +909,7 @@ export function AboutSection() {
               trigger: ".about-signals",
               start: "top 90%",
               end: "bottom 52%",
-              scrub: 0.4,
+              scrub: 0.2,
             },
           },
         );
@@ -812,26 +922,35 @@ export function AboutSection() {
         scrollTrigger: {
           trigger: ".expertise",
           start: "top 72%",
-          once: true,
+          toggleActions: "play none none reverse",
         },
       });
 
+      gsap.set(".expertise-heading > *", { y: 36, autoAlpha: 0 });
+      gsap.set(".expertise-row", {
+        y: 72,
+        rotationX: 7,
+        scale: 0.985,
+        autoAlpha: 0,
+        transformPerspective: 900,
+        transformOrigin: "50% 100%",
+      });
+      gsap.set(".expertise-index, .expertise-arrow", { y: 14, autoAlpha: 0 });
+
       expertiseTimeline
-        .from(".expertise-heading > *", {
-          y: 36,
-          autoAlpha: 0,
+        .to(".expertise-heading > *", {
+          y: 0,
+          autoAlpha: 1,
           duration: 0.72,
           stagger: 0.1,
         })
-        .from(
+        .to(
           ".expertise-row",
           {
-            y: 72,
-            rotationX: 7,
-            scale: 0.985,
-            autoAlpha: 0,
-            transformPerspective: 900,
-            transformOrigin: "50% 100%",
+            y: 0,
+            rotationX: 0,
+            scale: 1,
+            autoAlpha: 1,
             duration: 0.92,
             stagger: {
               each: 0.13,
@@ -841,11 +960,11 @@ export function AboutSection() {
           },
           "-=0.38",
         )
-        .from(
+        .to(
           ".expertise-index, .expertise-arrow",
           {
-            y: 14,
-            autoAlpha: 0,
+            y: 0,
+            autoAlpha: 1,
             duration: 0.46,
             stagger: 0.035,
           },
@@ -858,8 +977,7 @@ export function AboutSection() {
     return () => {
       isDestroyed = true;
       window.cancelAnimationFrame(rafId);
-      window.clearTimeout(touchReleaseTimer);
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
       backgroundResizeObserver.disconnect();
       backgroundIntersectionObserver.disconnect();
       removeUnderstoryPointer();

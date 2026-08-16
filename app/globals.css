@@ -41,7 +41,21 @@
   /* Load-state ground behind the Work frame sequence, tuned to the median tone
      of those frames so the swap is not a flash. */
   --work-frame-ground: #d1c1ba;
-  --nav-height: 82px;
+  /*
+   * Chrome height. Every consumer reads this token — the header itself, the
+   * menu topbar, the About topline, and the offsets that clear them. It used
+   * to be declared here and then hand-mirrored as a literal `82px` in five
+   * other rules, with the compact override living on `.hero-nav` where none of
+   * those five could see it. Changing the bar meant finding all nine.
+   */
+  --nav-height: 5.125rem;
+  /*
+   * The page gutter. One value, 23 call sites, all of them the same decision:
+   * how far content sits from the viewport edge.
+   */
+  --gutter: clamp(1.25rem, 3.4vw, 3.5rem);
+  /* The Contact chapter's inner gutter — a tighter rhythm inside the panel. */
+  --gutter-inner: clamp(1.125rem, 2.5vw, 2.5rem);
   /*
    * Label roles. The metadata layer is the system's connective tissue and it
    * had collapsed into 38 hardcoded `font-size: 11px` declarations carrying six
@@ -51,13 +65,32 @@
    *
    * `--type-label`  — primary: kickers, nav, buttons, identity, status lines.
    * `--type-label-sm` — secondary: indices, data keys, chips, captions.
-   * The pair resolves to 12/11px at 375px and 14/12.4px at 1440px, so the two
-   * steps stay distinguishable without either crossing the 11px floor.
+   *
+   * Both bounds and the intercept are in `rem`, so the pair also answers the
+   * reader's own text-size setting rather than only the viewport width. At the
+   * default 16px root they resolve to 12/11px at 375px and 14/12.4px at
+   * 1440px — unchanged — and the `0.6875rem` floor rises with the setting
+   * instead of capping it.
    */
-  --type-label: clamp(12px, 0.19vw + 11.3px, 15px);
-  --type-label-sm: clamp(11px, 0.13vw + 10.5px, 13px);
+  --type-label: clamp(0.75rem, 0.19vw + 0.70625rem, 0.9375rem);
+  --type-label-sm: clamp(0.6875rem, 0.13vw + 0.65625rem, 0.8125rem);
   --label-track: 0.12em;
   --label-track-sm: 0.1em;
+  /*
+   * Display tracking. Tracking is size-specific (Apple §15): large Syne caps
+   * need more negative track as they grow; a single value across a 2× clamp is
+   * wrong at one end. Three steps match the breakpoints that already retune
+   * `font-size` / `line-height`.
+   *
+   * `--display-track-sm` — phone / compact (~2–3.5rem)
+   * `--display-track`    — mid display (~3.5–5.5rem)
+   * `--display-track-lg` — large desktop caps (~5.5rem+)
+   * `--display-track-xl` — ultra (marquee / contact hero ceilings)
+   */
+  --display-track-sm: -0.045em;
+  --display-track: -0.055em;
+  --display-track-lg: -0.065em;
+  --display-track-xl: -0.075em;
   --font-inter: "Inter Variable", "Inter Fallback", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-syne: "Syne Variable", "Syne Fallback", "Arial Black", "Helvetica Neue", Helvetica, Arial,
     sans-serif;
@@ -83,8 +116,21 @@ body {
   margin: 0;
   color: var(--white);
   background: var(--ink);
-  font-family: var(--font-inter), Arial, sans-serif;
+  /* 100% / 1.5: respect the reader's text-size setting, and give unstyled
+     text a body lead instead of the UA's ~1.2. Display and label roles set
+     their own size + leading; this is the baseline they step from. */
+  font: 100%/1.5 var(--font-inter), Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /*
+   * Stated, but currently inert, and worth knowing why. Syne ships a `wght`
+   * axis only, so the display face has no optical size to vary. Inter does
+   * have an `opsz` axis, but the import above resolves to Fontsource's
+   * wght-only build; the `opsz` build is a separate entry point and costs
+   * ~25KB more on the latin subset. This declaration is what makes that a
+   * one-line switch rather than a hunt, and it guards against a reset setting
+   * `none` in the meantime.
+   */
+  font-optical-sizing: auto;
 }
 
 button,
@@ -115,7 +161,7 @@ main {
   overflow: hidden;
   color: var(--ink);
   background: transparent;
-  cursor: wait;
+  cursor: pointer;
 }
 
 .intro-panel {
@@ -154,10 +200,12 @@ main {
 }
 
 .intro-phrase {
-  margin: 18px 0 0;
-  font-size: clamp(12px, 1vw, 15px);
+  margin: 1.125rem 0 0;
+  font-size: clamp(0.75rem, 0.282vw + 0.684rem, 0.9375rem);
   font-weight: 500;
-  letter-spacing: -0.015em;
+  /* Small type wants slight positive track — negative pulled letters together
+     at a size that already reads dense. */
+  letter-spacing: 0.01em;
   will-change: transform, opacity;
 }
 
@@ -165,8 +213,8 @@ main {
   position: absolute;
   z-index: 3;
   top: 50%;
-  left: clamp(20px, 3.4vw, 56px);
-  right: clamp(20px, 3.4vw, 56px);
+  left: var(--gutter);
+  right: var(--gutter);
   height: 1px;
   background: rgba(5, 5, 5, 0.22);
   transform-origin: center;
@@ -183,7 +231,7 @@ main {
 .intro-corner {
   position: absolute;
   z-index: 2;
-  top: clamp(22px, 3.3vw, 52px);
+  top: clamp(1.375rem, 3.3vw, 3.25rem);
   font-size: var(--type-label);
   font-weight: 600;
   line-height: 1;
@@ -192,11 +240,11 @@ main {
 }
 
 .intro-corner-left {
-  left: clamp(20px, 3.4vw, 56px);
+  left: var(--gutter);
 }
 
 .intro-corner-right {
-  right: clamp(20px, 3.4vw, 56px);
+  right: var(--gutter);
 }
 
 .hero-sequence {
@@ -211,9 +259,11 @@ main {
   position: sticky;
   top: 0;
   height: 100svh;
-  min-height: 620px;
+  min-height: 38.75rem;
   overflow: hidden;
   isolation: isolate;
+  /* Vertical swipe scrolls the sequence; horizontal is left to the parallax. */
+  touch-action: pan-y;
   background-color: var(--ink);
   background-image: url("/assets/hero/frames/frame-001.jpg");
   background-position: center;
@@ -291,11 +341,11 @@ main {
   position: fixed;
   z-index: 90;
   top: 0;
-  left: clamp(20px, 3.4vw, 56px);
-  min-height: 44px;
+  left: var(--gutter);
+  min-height: 2.75rem;
   display: inline-flex;
   align-items: center;
-  padding: 0 17px;
+  padding: 0 1.0625rem;
   color: var(--ink);
   background: var(--brand);
   font-size: var(--type-label);
@@ -316,34 +366,59 @@ main {
 .hero-nav {
   /* Set per register: the bar crosses near-black, orange and cream grounds. */
   --nav-fg: var(--white);
-  --nav-rule: var(--line);
-  --nav-veil: linear-gradient(180deg, rgba(5, 5, 5, 0.62), transparent);
+  /* Frost fill — content scrolls under; the edge fade below replaces a hairline. */
+  --nav-fill: rgba(5, 5, 5, 0.48);
+  --nav-edge: linear-gradient(180deg, rgba(5, 5, 5, 0.28), transparent);
+  --nav-rim: rgba(255, 255, 255, 0.18);
 
   position: fixed;
   z-index: 40;
   top: 0;
-  left: clamp(20px, 3.4vw, 56px);
-  right: clamp(20px, 3.4vw, 56px);
-  height: var(--nav-height);
+  left: var(--gutter);
+  right: var(--gutter);
+  /* A floor, not a fixed height: the bar has to grow when its labels do. */
+  min-height: var(--nav-height);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   color: var(--nav-fg);
-  border-bottom: 1px solid var(--nav-rule);
-  background: var(--nav-veil);
+  border-bottom: 0;
+  background: var(--nav-fill);
+  /* Bright top rim = light catching the material, not a structural divider. */
+  box-shadow: inset 0 1px 0 var(--nav-rim);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  isolation: isolate;
   pointer-events: none;
-  transition: color 260ms ease, border-color 260ms ease, background 260ms ease;
+  transition:
+    color 260ms ease,
+    background 260ms ease,
+    box-shadow 260ms ease,
+    backdrop-filter 260ms ease;
+}
+
+/* Scroll-edge falloff: soft mask where floating chrome meets moving content. */
+.hero-nav::after {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 1.35rem;
+  content: "";
+  pointer-events: none;
+  background: var(--nav-edge);
 }
 
 /*
  * Light register: the orange marquee, the orange About portrait, and the cream
- * Work chapter. Without this the white wordmark, the white hairline and the
- * orange CTA all disappear across ~40% of the page.
+ * Work chapter. Without this the white wordmark and the orange CTA disappear
+ * across ~40% of the page.
  */
 .hero-nav[data-theme="light"] {
   --nav-fg: #111516;
-  --nav-rule: rgba(17, 21, 22, 0.2);
-  --nav-veil: linear-gradient(180deg, rgba(242, 239, 232, 0.72), transparent);
+  --nav-fill: rgba(242, 239, 232, 0.58);
+  --nav-edge: linear-gradient(180deg, rgba(242, 239, 232, 0.42), transparent);
+  --nav-rim: rgba(255, 255, 255, 0.55);
 }
 
 .hero-wordmark {
@@ -381,12 +456,25 @@ main {
   pointer-events: auto;
 }
 
+.nav-brand-button,
+.nav-menu-trigger,
+.menu-close {
+  /* Press lives on pointer-down — keep the settle short so it feels direct. */
+  transition: transform 100ms ease-out, opacity 100ms ease-out, color 220ms ease;
+}
+
+.nav-brand-button:active,
+.nav-menu-trigger:active,
+.menu-close:active {
+  transform: scale(0.97);
+}
+
 .nav-brand-button {
   width: max-content;
-  min-height: 44px;
+  min-height: 2.75rem;
   display: inline-flex;
   align-items: center;
-  padding: 8px 0;
+  padding: 0.5rem 0;
   background: transparent;
 }
 
@@ -394,12 +482,12 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 0.875rem;
   /* 44px, matching `.nav-brand-button` beside it. At 42 the primary mobile
      navigation control was the one header target under the touch minimum, and
      the header is 82px tall so the extra 2px changes no layout. */
-  min-height: 44px;
-  padding: 0 6px;
+  min-height: 2.75rem;
+  padding: 0 0.375rem;
   color: currentColor;
   background: transparent;
   font-size: var(--type-label);
@@ -450,6 +538,9 @@ main {
   width: 100%;
 }
 
+/* Geometry inside a fixed 24x12px icon box, so these stay in px: the glyph
+   does not scale with the label beside it, and an offset that did would pull
+   the two strokes off the centre they cross on. */
 .nav-menu-trigger[aria-expanded="true"] .nav-menu-icon i:first-child {
   top: 5.5px;
   transform: rotate(45deg);
@@ -463,13 +554,13 @@ main {
 
 .nav-collaboration-cta {
   justify-self: end;
-  min-width: clamp(188px, 16vw, 248px);
-  min-height: 48px;
+  min-width: clamp(11.75rem, 16vw, 15.5rem);
+  min-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 28px;
-  padding: 0 18px;
+  gap: 1.75rem;
+  padding: 0 1.125rem;
   color: #050505;
   background: var(--brand);
   font-size: var(--type-label);
@@ -503,7 +594,7 @@ main {
   display: inline-block;
   flex: 0 0 auto;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 900;
   line-height: 0.8;
   letter-spacing: 0;
@@ -546,14 +637,29 @@ main {
 }
 
 .portfolio-menu-topbar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 2;
-  height: 82px;
-  margin: 0 clamp(20px, 3.4vw, 56px);
+  min-height: var(--nav-height);
+  margin: 0 var(--gutter);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  /* Opaque fill so scrolling menu content passes under a soft edge, not a rule. */
+  background: var(--graphite);
+  border-bottom: 0;
+}
+
+.portfolio-menu-topbar::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1.1rem;
+  content: "";
+  pointer-events: none;
+  transform: translateY(100%);
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.55), transparent);
 }
 
 .menu-wordmark {
@@ -564,9 +670,9 @@ main {
 .menu-close {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  gap: 12px;
-  padding: 10px 6px;
+  min-height: 2.75rem;
+  gap: 0.75rem;
+  padding: 0.625rem 0.375rem;
   color: rgba(255, 255, 255, 0.78);
   background: transparent;
   font-size: var(--type-label);
@@ -581,6 +687,7 @@ main {
   height: 14px;
 }
 
+/* Same reasoning as the menu glyph: centred in a fixed 14x14px box. */
 .menu-close-icon i {
   top: 7px;
 }
@@ -595,11 +702,11 @@ main {
 
 .menu-collaboration-cta {
   justify-self: end;
-  min-height: 42px;
+  min-height: 2.625rem;
   display: flex;
   align-items: center;
-  gap: 26px;
-  padding: 0 15px;
+  gap: 1.625rem;
+  padding: 0 0.9375rem;
   color: #050505;
   background: var(--brand);
   font-size: var(--type-label);
@@ -611,11 +718,11 @@ main {
 .portfolio-menu-grid {
   position: relative;
   z-index: 1;
-  min-height: calc(100svh - 82px);
-  padding: clamp(46px, 7vh, 90px) clamp(20px, 3.4vw, 56px) clamp(38px, 5vh, 64px);
+  min-height: calc(100svh - var(--nav-height));
+  padding: clamp(2.875rem, 7vh, 5.625rem) var(--gutter) clamp(2.375rem, 5vh, 4rem);
   display: grid;
-  grid-template-columns: minmax(370px, 0.9fr) minmax(200px, 0.42fr) minmax(390px, 0.78fr);
-  gap: clamp(34px, 5vw, 88px);
+  grid-template-columns: minmax(23.125rem, 0.9fr) minmax(12.5rem, 0.42fr) minmax(24.375rem, 0.78fr);
+  gap: clamp(2.125rem, 5vw, 5.5rem);
   align-items: stretch;
 }
 
@@ -633,13 +740,26 @@ main {
   display: grid;
   grid-template-columns: 20px 1fr auto;
   align-items: center;
-  gap: clamp(12px, 1.4vw, 22px);
+  gap: clamp(0.75rem, 1.4vw, 1.375rem);
   width: 100%;
   padding: 2px 0;
   color: rgba(255, 255, 255, 0.96);
   text-decoration: none;
   perspective: 900px;
-  transition: color 220ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    color 220ms ease,
+    opacity 100ms ease-out,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * You-are-here stays quieter than preview: hollow marker, no brand tint, no
+ * shift. Preview (hover / focus / data-active) can override when both apply.
+ */
+.portfolio-menu-links a[aria-current="page"] .menu-link-marker {
+  transform: scale(1);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.72);
 }
 
 .portfolio-menu-links a:hover,
@@ -649,18 +769,29 @@ main {
   color: var(--brand);
 }
 
+.portfolio-menu-links a:active {
+  color: var(--brand);
+  opacity: 1;
+  transform: scale(0.97);
+}
+
 .menu-link-marker {
   width: 18px;
   height: 18px;
   background: currentColor;
   transform: scale(0);
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .portfolio-menu-links a:hover .menu-link-marker,
 .portfolio-menu-links a:focus-visible .menu-link-marker,
 .portfolio-menu-links a[data-active="true"] .menu-link-marker {
   transform: scale(1);
+  background: currentColor;
+  box-shadow: none;
 }
 
 .portfolio-menu-links a:hover .menu-link-marker,
@@ -670,10 +801,10 @@ main {
 
 .menu-link-label {
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(48px, 5vw, 86px);
+  font-size: clamp(3rem, 5vw, 5.375rem);
   font-weight: 700;
   line-height: 1.04;
-  letter-spacing: -0.055em;
+  letter-spacing: var(--display-track);
   transform-origin: center;
   transform-style: preserve-3d;
   backface-visibility: hidden;
@@ -686,7 +817,7 @@ main {
 
 .menu-link-index {
   align-self: end;
-  padding-bottom: 12px;
+  padding-bottom: 0.75rem;
   color: var(--brand);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -714,10 +845,10 @@ main {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding-top: 8px;
+  gap: 1.75rem;
+  padding-top: 0.5rem;
   color: rgba(255, 255, 255, 0.94);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.65;
 }
 
@@ -726,7 +857,7 @@ main {
 }
 
 .menu-meta-label {
-  margin-bottom: 8px !important;
+  margin-bottom: 0.5rem !important;
   color: rgba(255, 255, 255, 0.64);
   font-size: var(--type-label-sm);
   font-weight: 600;
@@ -737,13 +868,13 @@ main {
 .menu-meta-socials {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .menu-social-link {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
   border: 1px solid rgba(255, 79, 24, 0.72);
   border-radius: 50%;
@@ -753,7 +884,7 @@ main {
     color 220ms ease,
     background-color 220ms ease,
     border-color 220ms ease,
-    transform 280ms cubic-bezier(0.76, 0, 0.24, 1);
+    transform 100ms ease-out;
 }
 
 .menu-social-link:hover,
@@ -762,6 +893,13 @@ main {
   background: var(--brand);
   border-color: var(--brand);
   transform: translateY(-3px);
+}
+
+.menu-social-link:active {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+  transform: scale(0.97);
 }
 
 .menu-social-link:focus-visible {
@@ -775,7 +913,7 @@ main {
   min-height: 16px;
   place-items: center;
   font-family: var(--font-inter), Arial, sans-serif;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -783,17 +921,17 @@ main {
 
 .menu-social-icon[data-platform="linkedin"] {
   padding-top: 1px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .menu-social-icon[data-platform="facebook"] {
   padding-top: 3px;
   font-family: Arial, sans-serif;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .menu-social-icon[data-platform="x"] {
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: -0.12em;
 }
 
@@ -827,7 +965,7 @@ main {
 .menu-meta-signals {
   margin-top: 2px !important;
   display: grid;
-  gap: 6px;
+  gap: 0.375rem;
   color: rgba(255, 255, 255, 0.68);
   font-size: var(--type-label-sm);
   letter-spacing: var(--label-track-sm);
@@ -837,7 +975,7 @@ main {
 .menu-meta-signals p {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
 /* Scoped to the marker itself. As `.menu-meta-signals span` this also caught
@@ -863,7 +1001,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 9px;
+  gap: 0.25rem 0.5625rem;
 }
 
 .menu-meta-resume-label {
@@ -882,6 +1020,12 @@ main {
 .menu-meta-resume a:focus-visible {
   color: var(--brand);
   border-bottom-color: var(--brand);
+}
+
+.menu-meta-resume a:active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  opacity: 0.82;
 }
 
 .menu-meta-resume a:focus-visible {
@@ -906,26 +1050,26 @@ main {
 @media (pointer: coarse) {
   .menu-meta-resume-body {
     align-items: center;
-    gap: 0 4px;
+    gap: 0 0.25rem;
     /* Cancels the leading edge of the first link's padding so the group still
        lines up with the label above it. */
-    margin-left: -10px;
+    margin-left: -0.625rem;
   }
 
   .menu-meta-resume-label {
-    padding-left: 10px;
+    padding-left: 0.625rem;
   }
 
   .menu-meta-resume a {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    padding: 0 10px;
+    min-height: 2.75rem;
+    padding: 0 0.625rem;
   }
 
   .menu-social-link {
-    width: 44px;
-    height: 44px;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 }
 
@@ -977,20 +1121,20 @@ main {
 .menu-preview-number {
   position: absolute;
   z-index: 3;
-  right: 18px;
-  bottom: 14px;
+  right: 1.125rem;
+  bottom: 0.875rem;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(44px, 5vw, 78px);
+  font-size: clamp(2.75rem, 5vw, 4.875rem);
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.06em;
+  letter-spacing: var(--display-track-lg);
 }
 
 .portfolio-menu-preview figcaption {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  padding-top: 12px;
+  gap: 1.25rem;
+  padding-top: 0.75rem;
   color: rgba(255, 255, 255, 0.6);
   font-size: var(--type-label-sm);
   letter-spacing: var(--label-track-sm);
@@ -1044,20 +1188,20 @@ main {
 .hero-copy-grid {
   position: absolute;
   z-index: 2;
-  inset: 82px clamp(20px, 3.4vw, 56px) 68px;
+  inset: var(--nav-height) var(--gutter) 4.25rem;
   display: grid;
-  grid-template-columns: minmax(150px, 0.45fr) minmax(540px, 1.55fr) 1fr;
+  grid-template-columns: minmax(9.375rem, 0.45fr) minmax(33.75rem, 1.55fr) 1fr;
   align-items: center;
 }
 
 .hero-role {
   align-self: end;
-  padding-bottom: 28px;
+  padding-bottom: 1.75rem;
   color: var(--muted);
 }
 
 .hero-role p {
-  margin: 0 0 7px;
+  margin: 0 0 0.4375rem;
 }
 
 .hero-beats {
@@ -1081,7 +1225,7 @@ main {
    * capped 112px display needs to hold three lines, and it still sits inside
    * the column at every width.
    */
-  max-width: 880px;
+  max-width: 55rem;
 }
 
 /*
@@ -1093,8 +1237,8 @@ main {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 13px;
-  margin: 0 0 22px;
+  gap: 0 0.8125rem;
+  margin: 0 0 1.375rem;
   font-size: var(--type-label);
   font-weight: 700;
   line-height: 1.4;
@@ -1108,7 +1252,7 @@ main {
 
 .hero-identity-role {
   position: relative;
-  padding-left: 14px;
+  padding-left: 0.875rem;
   color: var(--brand);
 }
 
@@ -1130,7 +1274,7 @@ main {
  */
 .hero-identity-domains {
   flex-basis: 100%;
-  margin-top: 6px;
+  margin-top: 0.375rem;
   color: var(--muted);
   font-size: var(--type-label-sm);
   font-weight: 500;
@@ -1145,11 +1289,11 @@ main {
 .hero-identity-availability {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 0.5625rem;
   flex-basis: 100%;
   /* A larger step than the 6px above it: availability is its own beat, not the
      third line of the domain list. */
-  margin-top: 14px;
+  margin-top: 0.875rem;
   color: var(--white);
   font-size: var(--type-label-sm);
   font-weight: 600;
@@ -1169,7 +1313,7 @@ main {
 .hero-identity-location {
   display: none;
   flex-basis: 100%;
-  margin-top: 6px;
+  margin-top: 0.375rem;
   color: var(--muted);
   font-size: var(--type-label-sm);
   font-weight: 500;
@@ -1180,13 +1324,26 @@ main {
 .hero-beat-statement {
   margin: 0;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(58px, 7.25vw, 126px);
+  font-size: clamp(3.625rem, 7.25vw, 7.875rem);
   font-weight: 700;
   line-height: 0.82;
-  letter-spacing: -0.065em;
+  letter-spacing: var(--display-track-lg);
   text-transform: uppercase;
   /* Backstop: the sizes below are tuned to fit, but a long word must never
-     leave the viewport rather than wrap. */
+     leave the viewport rather than wrap.
+
+     That tuning assumed a fixed floor. Now that the display floor scales with
+     the reader's text size the backstop genuinely fires — at a 24px default on
+     a 375px viewport "DESIGNING" breaks and strands a single "G". That is the
+     accepted trade: the alternative is refusing the reader the size they asked
+     for, and `anywhere` still guarantees nothing leaves the viewport.
+
+     `hyphens` is a progressive enhancement over that guarantee, not a second
+     guarantee. It renders "DESIGN-/ING" only where the platform ships a
+     hyphenation dictionary for `lang="en"`; measured in an Electron webview it
+     produced no break opportunity at all, so `overflow-wrap` has to stay. */
+  -webkit-hyphens: auto;
+  hyphens: auto;
   overflow-wrap: anywhere;
 }
 
@@ -1206,10 +1363,10 @@ main {
  * column on the dark register.
  */
 .hero-support {
-  width: min(420px, 78%);
-  margin: 32px 0 0;
+  width: min(26.25rem, 78%);
+  margin: 2rem 0 0;
   color: rgba(255, 255, 255, 0.78);
-  font-size: clamp(14px, 1.1vw, 17px);
+  font-size: clamp(0.875rem, 0.282vw + 0.809rem, 1.0625rem);
   line-height: 1.55;
 }
 
@@ -1217,19 +1374,19 @@ main {
   position: absolute;
   z-index: 3;
   left: 0;
-  bottom: clamp(0px, 1.5vh, 18px);
+  bottom: clamp(0rem, 1.5vh, 1.125rem);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 /* Keep the desktop action row clear of the animated copy on short, wide viewports. */
-@media (min-width: 901px) {
+@media (min-width: 56.3125em) {
   .hero-beats {
     min-height: min(68vh, 650px);
     /* The identity block is a line taller than the kicker it replaced; at
        1280x720 the support copy reached into the anchored action row. */
-    padding-bottom: clamp(100px, 11vh, 124px);
+    padding-bottom: clamp(6.25rem, 11vh, 7.75rem);
   }
 
   /*
@@ -1250,38 +1407,42 @@ main {
    */
   .hero-beat h1,
   .hero-beat-statement {
-    font-size: clamp(58px, 6.25vw, 112px);
+    font-size: clamp(3.625rem, 6.25vw, 7rem);
   }
 }
 
 .hero-action {
-  min-height: 48px;
+  min-height: 3rem;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 28px;
-  padding: 0 17px;
+  gap: 1.75rem;
+  padding: 0 1.0625rem;
   font-size: var(--type-label);
   font-weight: 700;
   letter-spacing: var(--label-track);
   text-decoration: none;
   text-transform: uppercase;
-  transition: color 220ms ease, background 220ms ease, transform 220ms ease;
+  transition: color 100ms ease-out, background 100ms ease-out, transform 100ms ease-out;
 }
 
 .hero-action-primary {
-  min-width: 152px;
+  min-width: 9.5rem;
   color: var(--ink);
   background: var(--brand);
 }
 
 .hero-action-secondary {
-  min-width: 172px;
+  min-width: 10.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.72);
 }
 
 .hero-action:hover {
   transform: translateY(-2px);
+}
+
+.hero-action:active {
+  transform: scale(0.97);
 }
 
 .hero-action-primary:hover {
@@ -1297,18 +1458,18 @@ main {
 .hero-beat-statement {
   visibility: hidden;
   opacity: 0;
-  max-width: 900px;
+  max-width: 56.25rem;
 }
 
 .hero-scroll-status {
   position: absolute;
   z-index: 5;
-  right: clamp(20px, 3.4vw, 56px);
-  bottom: 28px;
+  right: var(--gutter);
+  bottom: 1.75rem;
   display: grid;
   grid-template-columns: auto minmax(90px, 14vw) auto;
   align-items: center;
-  gap: 14px;
+  gap: 0.875rem;
   color: rgba(255, 255, 255, 0.72);
 }
 
@@ -1327,11 +1488,11 @@ main {
   transform-origin: left center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 56.25em) {
   .portfolio-menu-grid {
     grid-template-columns: minmax(320px, 0.9fr) minmax(300px, 1fr);
     grid-template-rows: auto auto;
-    gap: 34px 42px;
+    gap: 2.125rem 2.625rem;
   }
 
   .portfolio-menu-links {
@@ -1344,7 +1505,7 @@ main {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     align-self: end;
-    gap: 18px;
+    gap: 1.125rem;
     padding-top: 0;
   }
 
@@ -1381,7 +1542,7 @@ main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
     align-items: stretch;
-    row-gap: 14px;
+    row-gap: 0.875rem;
   }
 
   .hero-role {
@@ -1407,13 +1568,13 @@ main {
    */
   .hero-beats {
     grid-row: 1;
-    width: min(690px, 92%);
+    width: min(43.125rem, 92%);
     min-width: 0;
     min-height: 0;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     align-items: end;
-    row-gap: clamp(20px, 4vh, 44px);
+    row-gap: clamp(1.25rem, 4vh, 2.75rem);
   }
 
   /* Only the headline beat joins the flow — it is the taller of the two, so it
@@ -1442,7 +1603,7 @@ main {
   }
 
   .hero-scroll-status {
-    bottom: 26px;
+    bottom: 1.625rem;
   }
 
   .hero-scroll-status > span:first-child,
@@ -1451,21 +1612,30 @@ main {
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .intro-corner-right {
     display: none;
   }
 
   .intro-phrase {
-    margin-top: 14px;
+    margin-top: 0.875rem;
   }
 
   .hero-sequence {
     height: 180svh;
   }
 
+  /*
+   * Declared on the root, not on `.hero-nav`. As a header-scoped override the
+   * menu topbar, the About topline and the two offsets that clear them never
+   * saw it, so each carried its own literal `70px` and the four could drift
+   * apart. One declaration now moves all of them.
+   */
+  :root {
+    --nav-height: 4.375rem;
+  }
+
   .hero-nav {
-    --nav-height: 70px;
     grid-template-columns: minmax(90px, 1fr) auto minmax(110px, 1fr);
   }
 
@@ -1474,7 +1644,7 @@ main {
   }
 
   .nav-menu-trigger {
-    gap: 8px;
+    gap: 0.5rem;
     font-size: var(--type-label-sm);
   }
 
@@ -1484,9 +1654,9 @@ main {
 
   .nav-collaboration-cta {
     min-width: 0;
-    min-height: 44px;
-    gap: 6px;
-    padding: 0 8px;
+    min-height: 2.75rem;
+    gap: 0.375rem;
+    padding: 0 0.5rem;
     font-size: var(--type-label-sm);
     letter-spacing: 0.02em;
   }
@@ -1496,7 +1666,6 @@ main {
   }
 
   .portfolio-menu-topbar {
-    height: 70px;
     grid-template-columns: 1fr auto 1fr;
   }
 
@@ -1505,7 +1674,7 @@ main {
   }
 
   .menu-close {
-    gap: 7px;
+    gap: 0.4375rem;
     font-size: var(--type-label-sm);
   }
 
@@ -1524,9 +1693,9 @@ main {
    * back without shrinking the type below the floor.
    */
   .menu-collaboration-cta {
-    gap: 6px;
-    min-height: 38px;
-    padding: 0 8px;
+    gap: 0.375rem;
+    min-height: 2.375rem;
+    padding: 0 0.5rem;
     font-size: var(--type-label-sm);
     letter-spacing: 0.03em;
   }
@@ -1541,11 +1710,10 @@ main {
   }
 
   .portfolio-menu-grid {
-    min-height: calc(100svh - 70px);
-    padding-top: 42px;
+    padding-top: 2.625rem;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 2rem;
   }
 
   .portfolio-menu-links {
@@ -1554,8 +1722,8 @@ main {
 
   .portfolio-menu-links a {
     grid-template-columns: 16px 1fr auto;
-    gap: 11px;
-    padding: 4px 0;
+    gap: 0.6875rem;
+    padding: 0.25rem 0;
   }
 
   .portfolio-menu-links a:hover,
@@ -1570,12 +1738,13 @@ main {
   }
 
   .menu-link-label {
-    font-size: clamp(46px, 15vw, 66px);
-    line-height: 1;
+    font-size: clamp(2.875rem, 15vw, 4.125rem);
+    line-height: 1.04;
+    letter-spacing: var(--display-track);
   }
 
   .menu-link-index {
-    padding-bottom: 8px;
+    padding-bottom: 0.5rem;
   }
 
   .portfolio-menu-preview {
@@ -1594,8 +1763,8 @@ main {
     order: 3;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding-bottom: 26px;
+    gap: 1.25rem;
+    padding-bottom: 1.625rem;
   }
 
   .menu-meta-signals {
@@ -1609,8 +1778,7 @@ main {
   }
 
   .hero-copy-grid {
-    top: 70px;
-    bottom: 60px;
+    bottom: 3.75rem;
   }
 
   /* `min-height: 64vh` with `padding-top: 18vh` was the phone half of the
@@ -1625,33 +1793,42 @@ main {
   .hero-beat-statement {
     /* 13vw keeps the longest line ("EXPERIENCES.") inside the 20px gutters at
        the 375px floor; 16vw clipped it by 92px. */
-    font-size: clamp(42px, 13vw, 72px);
+    font-size: clamp(2.625rem, 13vw, 4.5rem);
     line-height: 0.86;
+    letter-spacing: var(--display-track);
   }
 
   .hero-support {
-    width: min(320px, 92%);
-    margin-top: 24px;
+    width: min(20rem, 92%);
+    margin-top: 1.5rem;
   }
 
+  /*
+   * The pair shares the row when both labels fit and stacks when they do not.
+   * `flex: 1 1 0` with `min-width: 0` forced two equal halves and allowed each
+   * to shrink under its own label, so at a 20px default size "See work" and
+   * "About me" both ellipsised inside a row that had already run out of width.
+   * Sizing from content and permitting a wrap turns that into a second line,
+   * which costs vertical space the hero has and keeps both labels whole.
+   */
   .hero-actions {
-    width: min(340px, 100%);
-    gap: 10px;
+    width: min(21.25rem, 100%);
+    gap: 0.625rem;
+    flex-wrap: wrap;
   }
 
   .hero-actions .hero-action.button04 {
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 44px;
-    gap: 14px;
-    padding: 0 12px;
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+    gap: 0.875rem;
+    padding: 0 0.75rem;
     font-size: var(--type-label-sm);
   }
 
   .hero-actions .hero-action .button04_inner {
-    gap: 10px;
-    padding-right: 8px;
-    padding-left: 10px;
+    gap: 0.625rem;
+    padding-right: 0.5rem;
+    padding-left: 0.625rem;
   }
 
   .hero-actions .hero-action .button04_icon-wrap {
@@ -1660,13 +1837,13 @@ main {
   }
 
   .hero-identity {
-    gap: 0 10px;
+    gap: 0 0.625rem;
     font-size: var(--type-label-sm);
     letter-spacing: 0.1em;
   }
 
   .hero-identity-role {
-    padding-left: 11px;
+    padding-left: 0.6875rem;
   }
 
   .hero-three-canvas {
@@ -1675,13 +1852,13 @@ main {
 }
 
 /* Compact phones keep all hero content readable without CTA/text collisions. */
-@media (max-width: 620px) and (max-height: 700px) {
+@media (max-width: 38.75em) and (max-height: 43.75em) {
   .hero-stage {
     min-height: 100svh;
   }
 
   .hero-copy-grid {
-    bottom: 16px;
+    bottom: 1rem;
   }
 
   .hero-beats {
@@ -1689,7 +1866,7 @@ main {
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding-top: 100px;
+    padding-top: 6.25rem;
   }
 
   .hero-beat-one {
@@ -1697,24 +1874,25 @@ main {
   }
 
   .hero-identity {
-    margin-bottom: 12px;
+    margin-bottom: 0.75rem;
   }
 
   .hero-beat h1,
   .hero-beat-statement {
-    font-size: clamp(38px, 12.5vw, 48px);
+    font-size: clamp(2.375rem, 12.5vw, 3rem);
+    letter-spacing: var(--display-track-sm);
   }
 
   .hero-support {
-    margin-top: 12px;
-    font-size: 13px;
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
     line-height: 1.4;
   }
 
   .hero-actions {
     position: relative;
     bottom: auto;
-    margin-top: 12px;
+    margin-top: 0.75rem;
   }
 
   .hero-role,
@@ -1730,14 +1908,14 @@ main {
 }
 
 /* Short landscape phones use the width for actions instead of stacking them over copy. */
-@media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+@media (max-width: 56.25em) and (max-height: 31.25em) and (orientation: landscape) {
   .hero-stage {
     min-height: 100svh;
   }
 
   .hero-copy-grid {
-    top: 70px;
-    bottom: 12px;
+    top: 4.375rem;
+    bottom: 0.75rem;
   }
 
   .hero-beats {
@@ -1745,17 +1923,17 @@ main {
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding: 12px 0;
+    padding: 0.75rem 0;
   }
 
   .hero-beat-one {
     position: relative;
-    width: calc(100% - 190px);
+    width: calc(100% - 11.875rem);
   }
 
   .hero-identity {
-    gap: 0 9px;
-    margin-bottom: 8px;
+    gap: 0 0.5625rem;
+    margin-bottom: 0.5rem;
     font-size: var(--type-label-sm);
   }
 
@@ -1765,27 +1943,28 @@ main {
 
   .hero-beat h1,
   .hero-beat-statement {
-    font-size: clamp(34px, 6.2vw, 52px);
+    font-size: clamp(2.125rem, 6.2vw, 3.25rem);
     line-height: 0.8;
+    letter-spacing: var(--display-track-sm);
   }
 
   /* Body copy, not a label — 11px put reading text under the floor even here. */
   .hero-support {
-    width: min(360px, 100%);
-    margin-top: 10px;
-    font-size: 13px;
+    width: min(22.5rem, 100%);
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
     line-height: 1.42;
   }
 
   .hero-actions {
     position: absolute;
     right: 0;
-    bottom: 18px;
+    bottom: 1.125rem;
     left: auto;
-    width: 170px;
+    width: 10.625rem;
     margin-top: 0;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   .hero-actions .hero-action.button04 {
@@ -1805,12 +1984,28 @@ main {
   }
 }
 
-/* Preserve all three navigation controls at the 320px viewport floor. */
-@media (max-width: 340px) {
+/*
+ * Preserve all three navigation controls at the 320px viewport floor.
+ *
+ * The tracks are content-sized rather than the fixed `92px 78px 104px` they
+ * used to be, and that change is what the em breakpoints made necessary. This
+ * tier is no longer reached only by a narrow viewport — a reader at a 20px
+ * default font size crosses 21.25em at a 425px viewport, so a 375px phone lands
+ * here with 340px of usable width while the fixed tracks asked for 274px and
+ * left 66px unspent. The CTA label was ellipsised to "Cont…" with room to
+ * spare beside it.
+ *
+ * `minmax(0, auto)` sizes each track to its control when there is room and
+ * still lets it shrink when there genuinely is not, so the ellipsis stays the
+ * last resort it was designed to be instead of the first response. Scaling
+ * fixed tracks with `rem` would have done the opposite: three tracks wanting
+ * 411px inside a 312px opening at a 24px root.
+ */
+@media (max-width: 21.25em) {
   .hero-nav {
-    right: 14px;
-    left: 14px;
-    grid-template-columns: 92px 78px 104px;
+    right: 0.875rem;
+    left: 0.875rem;
+    grid-template-columns: minmax(0, auto) minmax(0, auto) minmax(0, auto);
     justify-content: space-between;
   }
 
@@ -1820,7 +2015,7 @@ main {
   }
 
   .nav-menu-trigger {
-    gap: 5px;
+    gap: 0.3125rem;
     padding-inline: 2px;
     font-size: var(--type-label-sm);
   }
@@ -1831,15 +2026,14 @@ main {
 
   .nav-collaboration-cta.button04,
   .menu-collaboration-cta.button04 {
-    width: 104px;
     min-width: 0;
   }
 
   .nav-collaboration-cta .button04_inner,
   .menu-collaboration-cta .button04_inner {
-    gap: 7px;
-    padding-right: 5px;
-    padding-left: 8px;
+    gap: 0.4375rem;
+    padding-right: 0.3125rem;
+    padding-left: 0.5rem;
   }
 
   .nav-collaboration-cta .button04_icon-wrap,
@@ -1849,14 +2043,14 @@ main {
   }
 
   .portfolio-menu-topbar {
-    margin-inline: 14px;
-    grid-template-columns: 92px 78px 104px;
+    margin-inline: 0.875rem;
+    grid-template-columns: minmax(0, auto) minmax(0, auto) minmax(0, auto);
     justify-content: space-between;
   }
 
   .menu-close {
     justify-self: center;
-    gap: 5px;
+    gap: 0.3125rem;
     padding-inline: 2px;
     font-size: var(--type-label-sm);
   }
@@ -1887,6 +2081,52 @@ main {
     display: none;
   }
 
+  .skip-link {
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+
+  .skip-link:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .portfolio-menu-links a {
+    transition: color 200ms ease, opacity 100ms ease-out;
+  }
+
+  .portfolio-menu-links a:hover,
+  .portfolio-menu-links a:focus-visible,
+  .portfolio-menu-links a[data-active="true"],
+  .portfolio-menu-links a:active {
+    transform: none;
+  }
+
+  .nav-brand-button:active,
+  .nav-menu-trigger:active,
+  .menu-close:active {
+    transform: none;
+  }
+
+  .menu-link-marker {
+    transition: none;
+  }
+
+  .menu-social-link {
+    transition:
+      color 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+
+  .menu-social-link:hover,
+  .menu-social-link:focus-visible,
+  .menu-social-link:active {
+    transform: none;
+  }
+
   .menu-preview-media img,
   .menu-preview-scan,
   .portfolio-menu-links a:hover .menu-link-label,
@@ -1903,13 +2143,13 @@ main {
   position: relative;
   z-index: 2;
   overflow: clip;
-  padding: clamp(104px, 12vw, 188px) clamp(20px, 3.4vw, 56px)
-    clamp(120px, 14vw, 220px);
+  padding: clamp(6.5rem, 12vw, 11.75rem) var(--gutter)
+    clamp(7.5rem, 14vw, 13.75rem);
   color: #111516;
   background:
     radial-gradient(circle at 78% 5%, rgba(255, 79, 24, 0.12), transparent 26%),
     #f2efe8;
-  scroll-margin-top: 82px;
+  scroll-margin-top: var(--nav-height);
 }
 
 /*
@@ -1959,8 +2199,8 @@ main {
   /* Offsets the blade's 1px overshoot above, so the hairline lands exactly on
      the chapter's top edge instead of being cut off by the shutter's clip. */
   top: 1px;
-  right: clamp(20px, 3.4vw, 56px);
-  left: clamp(20px, 3.4vw, 56px);
+  right: var(--gutter);
+  left: var(--gutter);
   height: 1px;
   background: rgba(5, 5, 5, 0.22);
 }
@@ -1989,19 +2229,19 @@ main {
 
 .work-introduction {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(0, 7fr) minmax(330px, 3.4fr);
-  gap: clamp(24px, 3vw, 52px);
+  grid-template-columns: minmax(11.25rem, 2fr) minmax(0, 7fr) minmax(20.625rem, 3.4fr);
+  gap: clamp(1.5rem, 3vw, 3.25rem);
   align-items: end;
-  max-width: 1800px;
-  margin: 0 auto clamp(92px, 12vw, 180px);
+  max-width: 112.5rem;
+  margin: 0 auto clamp(5.75rem, 12vw, 11.25rem);
 }
 
 .work-kicker {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 12px 0 0;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
   color: var(--stone);
   font-size: var(--type-label);
   font-weight: 700;
@@ -2017,10 +2257,10 @@ main {
 .work-heading {
   margin: 0;
   font-family: var(--font-syne), "Arial Black", sans-serif;
-  font-size: clamp(56px, 7.6vw, 144px);
+  font-size: clamp(3.5rem, 7.6vw, 9rem);
   font-weight: 600;
   line-height: 0.84;
-  letter-spacing: -0.065em;
+  letter-spacing: var(--display-track-lg);
 }
 
 .work-heading-animated {
@@ -2041,16 +2281,16 @@ main {
    same 1.55 the 60ch columns run. */
 .work-intro {
   max-width: 36ch;
-  margin: 0 0 4px;
+  margin: 0 0 0.25rem;
   color: #42494a;
-  font-size: clamp(16px, 1.25vw, 20px);
+  font-size: clamp(1rem, 0.376vw + 0.912rem, 1.25rem);
   line-height: 1.48;
 }
 
 .project-stories {
   display: grid;
-  gap: clamp(140px, 15vw, 240px);
-  max-width: 1800px;
+  gap: clamp(8.75rem, 15vw, 15rem);
+  max-width: 112.5rem;
   margin: 0 auto;
 }
 
@@ -2067,17 +2307,17 @@ main {
    */
   --project-accent-ink: #a83c1a;
   display: grid;
-  grid-template-columns: 46px minmax(0, 7fr) minmax(340px, 4fr);
-  gap: clamp(26px, 3.3vw, 62px);
+  grid-template-columns: 2.875rem minmax(0, 7fr) minmax(21.25rem, 4fr);
+  gap: clamp(1.625rem, 3.3vw, 3.875rem);
   align-items: center;
-  min-height: min(920px, 94svh);
+  min-height: min(57.5rem, 94svh);
 }
 
 .project-story-osteoplus {
   --project-accent: #d95e35;
   --project-deep: #183e43;
   --project-accent-ink: #9a4426;
-  grid-template-columns: 46px minmax(340px, 4fr) minmax(0, 7fr);
+  grid-template-columns: 2.875rem minmax(21.25rem, 4fr) minmax(0, 7fr);
 }
 
 .project-rail {
@@ -2087,9 +2327,9 @@ main {
   grid-row: 1;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 1.125rem;
   min-height: 540px;
-  padding: 10px 0;
+  padding: 0.625rem 0;
   color: #626969;
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -2158,12 +2398,12 @@ main {
 .project-media-label {
   position: absolute;
   z-index: 4;
-  top: 24px;
-  left: 24px;
-  right: 24px;
+  top: 1.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
   display: flex;
   justify-content: space-between;
-  gap: 24px;
+  gap: 1.5rem;
   font-size: var(--type-label-sm);
   font-weight: 700;
   line-height: 1.2;
@@ -2174,8 +2414,8 @@ main {
 .project-detail-image {
   position: absolute;
   z-index: 3;
-  right: clamp(20px, 3vw, 44px);
-  bottom: clamp(54px, 6vw, 84px);
+  right: clamp(1.25rem, 3vw, 2.75rem);
+  bottom: clamp(3.375rem, 6vw, 5.25rem);
   width: clamp(128px, 17vw, 264px);
   aspect-ratio: 4 / 5;
   overflow: hidden;
@@ -2188,7 +2428,7 @@ main {
 
 .project-story-osteoplus .project-detail-image {
   right: auto;
-  left: clamp(20px, 3vw, 44px);
+  left: clamp(1.25rem, 3vw, 2.75rem);
 }
 
 .project-detail-image img {
@@ -2220,8 +2460,8 @@ main {
 .project-status {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 14px;
+  gap: 1.25rem;
+  padding-bottom: 0.875rem;
   border-bottom: 1px solid rgba(17, 21, 22, 0.22);
   color: #596060;
   font-size: var(--type-label-sm);
@@ -2232,17 +2472,17 @@ main {
 }
 
 .project-title {
-  margin: clamp(28px, 4vw, 54px) 0 28px;
+  margin: clamp(1.75rem, 4vw, 3.375rem) 0 1.75rem;
   font-family: var(--font-syne), "Arial Black", sans-serif;
-  font-size: clamp(45px, 5.2vw, 92px);
+  font-size: clamp(2.8125rem, 5.2vw, 5.75rem);
   font-weight: 600;
   line-height: 0.92;
-  letter-spacing: -0.055em;
+  letter-spacing: var(--display-track);
 }
 
 .project-title span {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   /* Label-scale text on paper — the ink variant, not the fill accent. */
   color: var(--project-accent-ink);
   font-size: 0.3em;
@@ -2255,21 +2495,21 @@ main {
   max-width: 42ch;
   margin: 0;
   color: var(--slate);
-  font-size: clamp(18px, 1.45vw, 23px);
+  font-size: clamp(1.125rem, 0.469vw + 1.015rem, 1.4375rem);
   line-height: 1.48;
 }
 
 .project-scene {
   position: relative;
-  margin: clamp(34px, 4vw, 56px) 0;
-  padding: 22px 0 22px clamp(20px, 2vw, 34px);
+  margin: clamp(2.125rem, 4vw, 3.5rem) 0;
+  padding: 1.375rem 0 1.375rem clamp(1.25rem, 2vw, 2.125rem);
   border-left: 2px solid var(--project-accent);
 }
 
 .project-scene::before {
   content: "Decision narrative";
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   color: var(--ember-deep);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -2280,7 +2520,7 @@ main {
 .project-scene p {
   max-width: 44ch;
   margin: 0;
-  font-size: clamp(16px, 1.15vw, 19px);
+  font-size: clamp(1rem, 0.282vw + 0.934rem, 1.1875rem);
   font-weight: 550;
   line-height: 1.52;
 }
@@ -2294,9 +2534,9 @@ main {
 
 .project-facts > div {
   display: grid;
-  grid-template-columns: 74px 1fr;
-  gap: 20px;
-  padding: 13px 0;
+  grid-template-columns: 4.625rem 1fr;
+  gap: 1.25rem;
+  padding: 0.8125rem 0;
   border-bottom: 1px solid rgba(17, 21, 22, 0.14);
 }
 
@@ -2314,21 +2554,21 @@ main {
 }
 
 .project-facts dd {
-  font-size: clamp(13px, 0.19vw + 12.3px, 15px);
+  font-size: clamp(0.8125rem, 0.19vw + 0.76875rem, 0.9375rem);
   line-height: 1.5;
 }
 
 .project-proof {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin: 24px 0 0;
+  gap: 0.4375rem;
+  margin: 1.5rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .project-proof li {
-  padding: 9px 12px;
+  padding: 0.5625rem 0.75rem;
   border: 1px solid rgba(17, 21, 22, 0.2);
   border-radius: 999px;
   color: #434a4b;
@@ -2341,17 +2581,17 @@ main {
 .project-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 28px;
+  gap: 0.5rem;
+  margin-top: 1.75rem;
 }
 
 .project-actions a {
   display: flex;
-  min-height: 54px;
+  min-height: 3.375rem;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 0 16px;
+  gap: 1.25rem;
+  padding: 0 1rem;
   border: 1px solid #111516;
   border-radius: 0;
   color: #111516;
@@ -2361,9 +2601,9 @@ main {
   letter-spacing: 0.04em;
   text-decoration: none;
   transition:
-    color 220ms ease,
-    background-color 220ms ease,
-    transform 220ms ease;
+    color 100ms ease-out,
+    background-color 100ms ease-out,
+    transform 100ms ease-out;
 }
 
 .project-actions a:first-child {
@@ -2383,6 +2623,12 @@ main {
   transform: translateY(-2px);
 }
 
+.project-actions a:active {
+  color: #050505;
+  background: var(--project-accent);
+  transform: scale(0.97);
+}
+
 .project-actions a:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 3px;
@@ -2392,17 +2638,17 @@ main {
 .work-tools {
   position: relative;
   z-index: 1;
-  max-width: 1800px;
-  margin: clamp(120px, 14vw, 220px) auto 0;
+  max-width: 112.5rem;
+  margin: clamp(7.5rem, 14vw, 13.75rem) auto 0;
 }
 
 .work-tools-kicker {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  margin: 0 0 clamp(28px, 3.4vw, 48px);
-  padding-bottom: 14px;
+  gap: 1.5rem;
+  margin: 0 0 clamp(1.75rem, 3.4vw, 3rem);
+  padding-bottom: 0.875rem;
   border-bottom: 1px solid rgba(17, 21, 22, 0.22);
   color: var(--stone);
   font-size: var(--type-label);
@@ -2442,7 +2688,7 @@ main {
 }
 
 .work-tools-loop .logoloop__node {
-  transition: color 220ms ease;
+  transition: color 100ms ease-out;
 }
 
 .work-tools-loop .logoloop__link {
@@ -2450,14 +2696,15 @@ main {
 }
 
 .work-tools-loop .logoloop__link:hover,
-.work-tools-loop .logoloop__link:focus-visible {
+.work-tools-loop .logoloop__link:focus-visible,
+.work-tools-loop .logoloop__link:active {
   color: var(--brand);
   opacity: 1;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .work-tools {
-    margin-top: clamp(88px, 18vw, 132px);
+    margin-top: clamp(5.5rem, 18vw, 8.25rem);
   }
 
   .work-tools-loop {
@@ -2471,9 +2718,9 @@ main {
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 68.75em) {
   .work-introduction {
-    grid-template-columns: 160px 1fr;
+    grid-template-columns: 10rem 1fr;
   }
 
   .work-intro {
@@ -2483,8 +2730,8 @@ main {
 
   .project-story,
   .project-story-osteoplus {
-    grid-template-columns: 34px minmax(0, 1.15fr) minmax(300px, 0.85fr);
-    gap: 24px;
+    grid-template-columns: 2.125rem minmax(0, 1.15fr) minmax(18.75rem, 0.85fr);
+    gap: 1.5rem;
   }
 
   .project-story-osteoplus .project-copy {
@@ -2496,7 +2743,7 @@ main {
   }
 
   .project-media {
-    min-height: 620px;
+    min-height: 38.75rem;
   }
 
   .project-detail-image {
@@ -2504,10 +2751,10 @@ main {
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 51.25em) {
   .work-section {
-    padding-right: clamp(20px, 5vw, 42px);
-    padding-left: clamp(20px, 5vw, 42px);
+    padding-right: clamp(1.25rem, 5vw, 2.625rem);
+    padding-left: clamp(1.25rem, 5vw, 2.625rem);
   }
 
   .work-introduction {
@@ -2520,13 +2767,13 @@ main {
   }
 
   .project-stories {
-    gap: 132px;
+    gap: 8.25rem;
   }
 
   .project-story,
   .project-story-osteoplus {
-    grid-template-columns: 24px minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+    gap: 1.125rem;
     min-height: auto;
   }
 
@@ -2540,19 +2787,20 @@ main {
   .project-story-osteoplus .project-media {
     grid-column: 2;
     grid-row: 1;
-    min-height: min(690px, 78svh);
+    min-height: min(43.125rem, 78svh);
   }
 
   .project-copy,
   .project-story-osteoplus .project-copy {
     grid-column: 2;
     grid-row: 2;
-    max-width: 680px;
-    padding-top: 40px;
+    max-width: 42.5rem;
+    padding-top: 2.5rem;
   }
 
   .project-title {
-    font-size: clamp(50px, 10vw, 80px);
+    font-size: clamp(3.125rem, 10vw, 5rem);
+    letter-spacing: var(--display-track);
   }
 
   .project-description {
@@ -2560,26 +2808,27 @@ main {
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .work-section {
-    padding-top: 96px;
-    padding-bottom: 124px;
+    padding-top: 6rem;
+    padding-bottom: 7.75rem;
   }
 
   .work-introduction {
-    margin-bottom: 88px;
+    margin-bottom: 5.5rem;
   }
 
   .work-heading {
-    font-size: clamp(48px, 15vw, 74px);
+    font-size: clamp(3rem, 15vw, 4.625rem);
+    letter-spacing: var(--display-track);
   }
 
   .work-intro {
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .project-stories {
-    gap: 116px;
+    gap: 7.25rem;
   }
 
   .project-story,
@@ -2599,15 +2848,15 @@ main {
   }
 
   .project-media-label {
-    top: 18px;
-    left: 18px;
-    right: 18px;
+    top: 1.125rem;
+    left: 1.125rem;
+    right: 1.125rem;
   }
 
   .project-detail-image,
   .project-story-osteoplus .project-detail-image {
-    right: 18px;
-    bottom: 46px;
+    right: 1.125rem;
+    bottom: 2.875rem;
     left: auto;
     width: 38%;
     border-radius: 13px;
@@ -2615,20 +2864,21 @@ main {
 
   .project-copy,
   .project-story-osteoplus .project-copy {
-    padding-top: 34px;
+    padding-top: 2.125rem;
   }
 
   .project-title {
-    margin-top: 26px;
-    font-size: clamp(44px, 13vw, 64px);
+    margin-top: 1.625rem;
+    font-size: clamp(2.75rem, 13vw, 4rem);
+    letter-spacing: var(--display-track-sm);
   }
 
   .project-description {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .project-scene {
-    margin: 32px 0;
+    margin: 2rem 0;
   }
 
   .project-actions {
@@ -2651,7 +2901,13 @@ main {
   }
 
   .project-actions a {
-    transition: none;
+    transition: color 100ms ease-out, background-color 100ms ease-out;
+  }
+
+  .project-actions a:hover,
+  .project-actions a:focus-visible,
+  .project-actions a:active {
+    transform: none;
   }
 }
 
@@ -2724,9 +2980,9 @@ main {
   position: absolute;
   z-index: 4;
   top: 0;
-  left: clamp(20px, 3.4vw, 56px);
-  right: clamp(20px, 3.4vw, 56px);
-  height: 82px;
+  left: var(--gutter);
+  right: var(--gutter);
+  min-height: var(--nav-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2746,14 +3002,14 @@ main {
   position: absolute;
   z-index: 3;
   top: 19%;
-  left: clamp(20px, 3.4vw, 56px);
+  left: var(--gutter);
   margin: 0;
-  width: min(850px, 73vw);
+  width: min(53.125rem, 73vw);
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(54px, 7.1vw, 124px);
+  font-size: clamp(3.375rem, 7.1vw, 7.75rem);
   font-weight: 700;
   line-height: 0.86;
-  letter-spacing: -0.065em;
+  letter-spacing: var(--display-track-lg);
   text-transform: uppercase;
   pointer-events: none;
 }
@@ -2775,12 +3031,12 @@ main {
 .about-reveal-hint {
   position: absolute;
   z-index: 3;
-  left: clamp(20px, 3.4vw, 56px);
-  bottom: 32px;
+  left: var(--gutter);
+  bottom: 2rem;
   display: grid;
   grid-template-columns: auto minmax(44px, 7vw) auto;
   align-items: center;
-  gap: 13px;
+  gap: 0.8125rem;
   color: rgba(255, 255, 255, 0.7);
   font-size: var(--type-label-sm);
   font-weight: 500;
@@ -2811,6 +3067,7 @@ main {
     0 0 0 6px rgba(255, 255, 255, 0.08),
     0 12px 30px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
@@ -2825,6 +3082,7 @@ main {
 
 .about-cursor i {
   position: absolute;
+  /* Placed inside the fixed 82px reveal cursor, which does not scale. */
   right: 19px;
   bottom: 18px;
   width: 5px;
@@ -2847,9 +3105,9 @@ main {
   display: grid;
   grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1.58fr);
   align-items: start;
-  gap: clamp(32px, 7vw, 120px);
-  padding: clamp(24px, 2.8vw, 44px) clamp(20px, 3.4vw, 56px)
-    clamp(24px, 3vw, 48px);
+  gap: clamp(2rem, 7vw, 7.5rem);
+  padding: clamp(1.5rem, 2.8vw, 2.75rem) var(--gutter)
+    clamp(1.5rem, 3vw, 3rem);
   overflow: hidden;
   perspective: 1400px;
   transform-style: preserve-3d;
@@ -2858,7 +3116,7 @@ main {
 .about-understory::before {
   content: "";
   position: absolute;
-  top: -72px;
+  top: -4.5rem;
   left: 0;
   width: 100%;
   height: 74px;
@@ -2878,8 +3136,8 @@ main {
   display: grid;
   grid-template-rows: auto 1fr auto;
   align-items: start;
-  gap: 24px;
-  padding-top: 16px;
+  gap: 1.5rem;
+  padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.28);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -2900,7 +3158,7 @@ main {
 
 .about-depth-arrow {
   display: inline-block;
-  font-size: 17px;
+  font-size: 1.0625rem;
   color: var(--brand);
   will-change: transform;
 }
@@ -2925,8 +3183,8 @@ main {
 .about-depth-progress {
   justify-self: end;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: 12px;
-  letter-spacing: -0.02em;
+  font-size: var(--type-label-sm);
+  letter-spacing: 0;
 }
 
 .about-depth-field {
@@ -3029,20 +3287,20 @@ main {
 .about-story {
   position: relative;
   z-index: 2;
-  width: min(1020px, 100%);
+  width: min(63.75rem, 100%);
   transform-origin: center top;
   transform-style: preserve-3d;
   will-change: transform;
 }
 
 .about-story-lead {
-  max-width: 950px;
+  max-width: 59.375rem;
   margin: 0;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(48px, 5.7vw, 100px);
+  font-size: clamp(3rem, 5.7vw, 6.25rem);
   font-weight: 700;
   line-height: 0.88;
-  letter-spacing: -0.06em;
+  letter-spacing: var(--display-track-lg);
   text-transform: uppercase;
   text-shadow: 0 5px 36px rgba(0, 0, 0, 0.82);
 }
@@ -3071,13 +3329,13 @@ main {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
-  margin-top: clamp(28px, 3.4vw, 54px);
+  margin-top: clamp(1.75rem, 3.4vw, 3.375rem);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .about-story-card {
-  min-height: clamp(190px, 14.5vw, 244px);
+  min-height: clamp(11.875rem, 14.5vw, 15.25rem);
   perspective: 1300px;
   will-change: transform, opacity;
 }
@@ -3085,7 +3343,9 @@ main {
 .about-story-card-inner {
   position: relative;
   min-height: inherit;
-  transform: rotateY(180deg);
+  /* Start on the front face so CSS matches the GSAP from-state (0 → 180).
+     Reduced-motion overrides this to show the written side flat. */
+  transform: rotateY(0deg);
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -3096,7 +3356,7 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(22px, 2.1vw, 34px);
+  padding: clamp(1.375rem, 2.1vw, 2.125rem);
   overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
@@ -3110,6 +3370,7 @@ main {
     rgba(5, 5, 5, 0.56);
   box-shadow: inset 0 0 64px rgba(255, 79, 24, 0.07);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .about-story-card-front::after {
@@ -3145,10 +3406,10 @@ main {
 .about-story-card-label {
   max-width: 88%;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(25px, 2.45vw, 40px);
+  font-size: clamp(1.5625rem, 2.45vw, 2.5rem);
   font-weight: 700;
   line-height: 0.94;
-  letter-spacing: -0.045em;
+  letter-spacing: var(--display-track-sm);
   text-transform: uppercase;
 }
 
@@ -3156,7 +3417,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 14px;
+  padding-top: 0.875rem;
   border-top: 1px solid rgba(255, 255, 255, 0.24);
   color: rgba(255, 255, 255, 0.68);
   font-size: var(--type-label);
@@ -3167,7 +3428,7 @@ main {
 
 .about-story-card-action i {
   color: var(--brand);
-  font-size: 16px;
+  font-size: 1rem;
   font-style: normal;
 }
 
@@ -3177,9 +3438,9 @@ main {
   max-width: 46ch;
   margin: 0;
   color: rgba(5, 5, 5, 0.86);
-  font-size: clamp(15px, 1.16vw, 19px);
+  font-size: clamp(0.9375rem, 0.376vw + 0.849rem, 1.1875rem);
   line-height: 1.55;
-  letter-spacing: -0.015em;
+  letter-spacing: 0;
 }
 
 .about-story-card-decrypt-char {
@@ -3195,15 +3456,15 @@ main {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  margin-top: 12px;
+  margin-top: 0.75rem;
   border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .about-signals span {
   display: grid;
-  min-height: 46px;
+  min-height: 2.875rem;
   place-items: center;
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   border-right: 1px solid rgba(255, 255, 255, 0.3);
@@ -3213,6 +3474,7 @@ main {
   background: rgba(5, 5, 5, 0.34);
   box-shadow: inset 0 0 0 1px rgba(255, 79, 24, 0.08);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-size: var(--type-label-sm);
   font-weight: 700;
   letter-spacing: var(--label-track-sm);
@@ -3223,7 +3485,7 @@ main {
 
 .expertise {
   position: relative;
-  padding: clamp(96px, 11vw, 176px) clamp(20px, 3.4vw, 56px) clamp(120px, 13vw, 208px);
+  padding: clamp(6rem, 11vw, 11rem) var(--gutter) clamp(7.5rem, 13vw, 13rem);
   background: var(--ink);
 }
 
@@ -3236,8 +3498,8 @@ main {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   align-items: last baseline;
-  gap: clamp(48px, 9vw, 150px);
-  margin-bottom: clamp(72px, 8vw, 128px);
+  gap: clamp(3rem, 9vw, 9.375rem);
+  margin-bottom: clamp(4.5rem, 8vw, 8rem);
 }
 
 .expertise-heading p {
@@ -3247,11 +3509,17 @@ main {
 .expertise-heading h2 {
   margin: 0;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(44px, 5.7vw, 100px);
+  font-size: clamp(2.75rem, 5.7vw, 6.25rem);
   font-weight: 700;
+  /* "DISCIPLINES." and "EXPERIENCES." are single words at display size, so they
+     meet the wrap backstop before anything else does. Hyphenation improves the
+     break where the platform supports it; see the hero heading for why it
+     cannot replace `overflow-wrap`. */
+  -webkit-hyphens: auto;
+  hyphens: auto;
   overflow-wrap: anywhere;
   line-height: 0.78;
-  letter-spacing: -0.065em;
+  letter-spacing: var(--display-track-lg);
   text-transform: uppercase;
 }
 
@@ -3263,7 +3531,7 @@ main {
 .expertise-intro {
   max-width: 48ch;
   color: rgba(255, 255, 255, 0.72);
-  font-size: clamp(16px, 0.42vw + 14.4px, 21px);
+  font-size: clamp(1rem, 0.42vw + 0.9rem, 1.3125rem);
   line-height: 1.5;
 }
 
@@ -3287,16 +3555,16 @@ main {
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
   align-items: start;
-  gap: 0 clamp(24px, 3vw, 48px);
-  min-height: clamp(300px, 24vw, 404px);
-  padding: clamp(30px, 3.2vw, 52px);
+  gap: 0 clamp(1.5rem, 3vw, 3rem);
+  min-height: clamp(18.75rem, 24vw, 25.25rem);
+  padding: clamp(1.875rem, 3.2vw, 3.25rem);
   overflow: hidden;
   isolation: isolate;
   border-right: 1px solid rgba(255, 255, 255, 0.28);
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   transition:
-    color 400ms cubic-bezier(0.76, 0, 0.24, 1),
-    border-color 400ms cubic-bezier(0.76, 0, 0.24, 1);
+    color 100ms ease-out,
+    border-color 100ms ease-out;
 }
 
 .expertise-row::before {
@@ -3306,19 +3574,21 @@ main {
   inset: 0;
   background: var(--brand);
   transform: translateY(102%);
-  transition: transform 620ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform 100ms ease-out;
 }
 
 .expertise-row:nth-child(2n)::before {
   transform: translateY(-102%);
 }
 
-.expertise-row:hover {
+.expertise-row:hover,
+.expertise-row:active {
   color: var(--ink);
   border-color: rgba(5, 5, 5, 0.22);
 }
 
-.expertise-row:hover::before {
+.expertise-row:hover::before,
+.expertise-row:active::before {
   transform: translateY(0);
 }
 
@@ -3329,21 +3599,25 @@ main {
   font-size: var(--type-label-sm);
   font-weight: 600;
   letter-spacing: var(--label-track-sm);
-  transition: color 400ms ease;
+  transition: color 100ms ease-out;
 }
 
-.expertise-row:hover .expertise-index {
+.expertise-row:hover .expertise-index,
+.expertise-row:active .expertise-index {
   color: var(--ink);
 }
 
 .expertise-row h3 {
-  margin: 0 0 18px;
+  margin: 0 0 1.125rem;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(34px, 3.8vw, 62px);
+  font-size: clamp(2.125rem, 3.8vw, 3.875rem);
   line-height: 0.9;
-  letter-spacing: -0.045em;
+  letter-spacing: var(--display-track-sm);
   text-transform: uppercase;
-  /* Long single words ("RESEARCH", "SYSTEMS") must wrap, not leave the cell. */
+  /* Long single words ("RESEARCH", "SYSTEMS") must wrap, not leave the cell;
+     hyphenation softens the break where it is supported. */
+  -webkit-hyphens: auto;
+  hyphens: auto;
   overflow-wrap: anywhere;
 }
 
@@ -3353,8 +3627,8 @@ main {
   align-self: start;
   /* Tight to the index above; the generous interval belongs below, where the
      group actually breaks. */
-  padding: 12px 0 clamp(44px, 4.5vw, 80px);
-  transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
+  padding: 0.75rem 0 clamp(2.75rem, 4.5vw, 5rem);
+  transition: transform 100ms ease-out;
 }
 
 /* Capped in ch, not px: at 520px this ran 70ch on a narrow viewport and 62ch
@@ -3363,16 +3637,18 @@ main {
   max-width: 58ch;
   margin: 0;
   color: rgba(255, 255, 255, 0.66);
-  font-size: clamp(14px, 1.15vw, 17px);
+  font-size: clamp(0.875rem, 0.282vw + 0.809rem, 1.0625rem);
   line-height: 1.62;
-  transition: color 400ms ease;
+  transition: color 100ms ease-out;
 }
 
-.expertise-row:hover .expertise-row-copy {
+.expertise-row:hover .expertise-row-copy,
+.expertise-row:active .expertise-row-copy {
   transform: translateX(8px);
 }
 
-.expertise-row:hover .expertise-row-copy > p {
+.expertise-row:hover .expertise-row-copy > p,
+.expertise-row:active .expertise-row-copy > p {
   color: rgba(5, 5, 5, 0.78);
 }
 
@@ -3380,32 +3656,35 @@ main {
   grid-column: 1 / -1;
   grid-row: 3;
   display: grid;
-  gap: 11px;
+  gap: 0.6875rem;
   margin: 0;
-  padding: 22px 0 0;
+  padding: 1.375rem 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
   list-style: none;
   color: rgba(255, 255, 255, 0.74);
-  font-size: clamp(13px, 0.14vw + 12.5px, 15px);
+  font-size: clamp(0.8125rem, 0.14vw + 0.78125rem, 0.9375rem);
   line-height: 1.4;
   transition:
-    color 400ms ease,
-    border-color 400ms ease,
-    transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
+    color 100ms ease-out,
+    border-color 100ms ease-out,
+    transform 100ms ease-out;
 }
 
 .expertise-row li::before {
   content: "—";
-  margin-right: 12px;
+  margin-right: 0.75rem;
   color: var(--brand);
 }
 
 .expertise-row:hover ul,
-.expertise-row:hover li::before {
+.expertise-row:hover li::before,
+.expertise-row:active ul,
+.expertise-row:active li::before {
   color: var(--ink);
 }
 
-.expertise-row:hover ul {
+.expertise-row:hover ul,
+.expertise-row:active ul {
   border-color: rgba(5, 5, 5, 0.24);
   transform: translateY(-5px);
 }
@@ -3420,15 +3699,15 @@ main {
  * Keep the complete scroll-synced story inside short, wide laptop viewports.
  * The normal desktop scale remains untouched on taller displays.
  */
-@media (min-width: 901px) and (max-height: 760px) {
+@media (min-width: 56.3125em) and (max-height: 47.5em) {
   .about-understory-stage {
-    padding-top: clamp(14px, 2vh, 20px);
-    padding-bottom: clamp(14px, 2vh, 20px);
+    padding-top: clamp(0.875rem, 2vh, 1.25rem);
+    padding-bottom: clamp(0.875rem, 2vh, 1.25rem);
   }
 
   .about-depth-label {
     min-height: calc(100svh - clamp(28px, 4vh, 40px));
-    padding-top: 10px;
+    padding-top: 0.625rem;
   }
 
   .about-story {
@@ -3437,39 +3716,40 @@ main {
 
   .about-story-lead {
     max-width: 100%;
-    font-size: clamp(50px, 5.05vw, 76px);
+    font-size: clamp(3.125rem, 5.05vw, 4.75rem);
     line-height: 0.84;
+    letter-spacing: var(--display-track);
   }
 
   .about-story-detail {
-    margin-top: clamp(18px, 2.8vh, 24px);
+    margin-top: clamp(1.125rem, 2.8vh, 1.5rem);
   }
 
   .about-story-card {
-    min-height: clamp(186px, 29vh, 198px);
+    min-height: clamp(11.625rem, 29vh, 12.375rem);
   }
 
   .about-story-card-face {
-    padding: clamp(18px, 2vw, 26px);
+    padding: clamp(1.125rem, 2vw, 1.625rem);
   }
 
   .about-story-card-back p {
-    font-size: clamp(13px, 1.06vw, 15px);
+    font-size: clamp(0.8125rem, 0.188vw + 0.768rem, 0.9375rem);
     line-height: 1.45;
   }
 
   .about-signals {
-    margin-top: 8px;
+    margin-top: 0.5rem;
   }
 
   .about-signals span {
-    min-height: 38px;
-    padding: 7px 9px;
+    min-height: 2.375rem;
+    padding: 0.4375rem 0.5625rem;
     font-size: var(--type-label-sm);
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 56.25em) {
   .about-image-shade {
     background:
       linear-gradient(90deg, rgba(5, 5, 5, 0.66), rgba(5, 5, 5, 0.05) 75%),
@@ -3489,8 +3769,8 @@ main {
     position: relative;
     min-height: auto;
     grid-template-columns: 1fr;
-    padding-top: 92px;
-    padding-bottom: 104px;
+    padding-top: 5.75rem;
+    padding-bottom: 6.5rem;
   }
 
   .about-depth-label {
@@ -3505,7 +3785,7 @@ main {
   }
 
   .about-depth-line {
-    left: 20px;
+    left: 1.25rem;
   }
 
   .about-background-scrim {
@@ -3525,7 +3805,7 @@ main {
   }
 
   .about-story-card {
-    min-height: 250px;
+    min-height: 15.625rem;
   }
 
   .about-signals {
@@ -3538,12 +3818,12 @@ main {
   }
 
   .expertise-row {
-    min-height: 420px;
-    padding: 30px;
+    min-height: 26.25rem;
+    padding: 1.875rem;
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 45em) {
   .expertise-list {
     grid-template-columns: 1fr;
   }
@@ -3556,18 +3836,15 @@ main {
     transform: translateY(102%);
   }
 
-  .expertise-row:hover::before {
+  .expertise-row:hover::before,
+  .expertise-row:active::before {
     transform: translateY(0);
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .about-portrait {
     min-height: 92svh;
-  }
-
-  .about-topline {
-    height: 70px;
   }
 
   .about-topline span:last-child {
@@ -3576,8 +3853,9 @@ main {
 
   .about-title {
     top: 17%;
-    width: calc(100% - 40px);
-    font-size: clamp(46px, 14.5vw, 70px);
+    width: calc(100% - 2.5rem);
+    font-size: clamp(2.875rem, 14.5vw, 4.375rem);
+    letter-spacing: var(--display-track);
   }
 
   .about-image {
@@ -3597,39 +3875,41 @@ main {
   }
 
   .about-understory-stage {
-    padding-top: 92px;
-    padding-bottom: 104px;
+    padding-top: 5.75rem;
+    padding-bottom: 6.5rem;
   }
 
   .about-story-lead {
-    font-size: clamp(44px, 14vw, 68px);
+    font-size: clamp(2.75rem, 14vw, 4.25rem);
+    letter-spacing: var(--display-track);
   }
 
   /* "DISCIPLINES." rendered 360px wide inside a 335px column at 375px — the
      word left the viewport. Sized so the longest word fits, with the same
      wrap backstop the hero carries. */
   .expertise-heading h2 {
-    font-size: clamp(40px, 12.7vw, 58px);
+    font-size: clamp(2.5rem, 12.7vw, 3.625rem);
+    letter-spacing: var(--display-track-sm);
   }
 
   .expertise-row {
     grid-template-columns: auto 1fr auto;
-    padding: 28px 22px;
+    padding: 1.75rem 1.375rem;
   }
 
   .expertise-row-copy > p {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   /* Same cadence as the desktop cell: tight under the index, open before the
      rule. 34px above put the index adrift from the title it belongs to. */
   .expertise-row-copy {
-    padding: 10px 0 36px;
+    padding: 0.625rem 0 2.25rem;
   }
 
   .expertise-row ul {
-    gap: 9px;
-    font-size: 13px;
+    gap: 0.5625rem;
+    font-size: 0.8125rem;
   }
 }
 
@@ -3645,7 +3925,9 @@ main {
   .about-signals span,
   .about-depth-line,
   .about-depth-arrow,
-  .expertise-row {
+  .expertise-row,
+  .expertise-row-copy,
+  .expertise-row ul {
     transform: none !important;
   }
 
@@ -3653,14 +3935,128 @@ main {
     transform: rotateY(180deg) !important;
   }
 
+  .about-liquid-canvas,
+  .about-cursor,
+  .about-reveal-hint,
   .about-depth-lens,
-  .about-depth-track {
+  .about-depth-track,
+  .about-topline span:last-child {
     display: none;
   }
 
-  .expertise-row,
+  .about-portrait {
+    cursor: auto;
+  }
+
   .expertise-row::before {
-    transition: none !important;
+    display: none;
+  }
+
+  .expertise-row:hover,
+  .expertise-row:active {
+    background: var(--brand);
+  }
+
+  .expertise-row,
+  .expertise-row::before,
+  .expertise-row-copy,
+  .expertise-row ul {
+    transition: color 100ms ease-out, border-color 100ms ease-out !important;
+  }
+
+  .expertise-row:hover .expertise-row-copy,
+  .expertise-row:active .expertise-row-copy,
+  .expertise-row:hover ul,
+  .expertise-row:active ul {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hero-nav {
+    background: #050505;
+    box-shadow: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .hero-nav[data-theme="light"] {
+    background: #f2efe8;
+    border-bottom-color: rgba(17, 21, 22, 0.2);
+  }
+
+  .hero-nav::after,
+  .portfolio-menu-topbar::after {
+    display: none;
+  }
+
+  .portfolio-menu-topbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .about-cursor {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .about-story-card-front {
+    background: #0a0a0a;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .about-signals span {
+    background: #111516;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .hero-nav {
+    background: #050505;
+    box-shadow: none;
+    border-bottom: 1px solid #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .hero-nav[data-theme="light"] {
+    background: #f2efe8;
+    border-bottom-color: #111516;
+  }
+
+  .hero-nav::after,
+  .portfolio-menu-topbar::after {
+    display: none;
+  }
+
+  .portfolio-menu-topbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+  }
+
+  .about-cursor {
+    background: #fff;
+    border: 2px solid #050505;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .about-story-card-front {
+    background: #050505;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .about-signals span {
+    background: #050505;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 
@@ -3753,12 +4149,42 @@ html.is-loading .intro-loader {
     background: Highlight;
   }
 
+  /* Hollow "you are here" must stay distinct from the filled preview marker. */
+  .portfolio-menu-links a[aria-current="page"] .menu-link-marker {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px CanvasText;
+  }
+
+  .portfolio-menu-links a[data-active="true"] .menu-link-marker,
+  .portfolio-menu-links a:hover .menu-link-marker,
+  .portfolio-menu-links a:focus-visible .menu-link-marker {
+    background: Highlight;
+    box-shadow: none;
+  }
+
   /* Hairlines at 24% alpha resolve to nothing. Give every divider a real one. */
-  .hero-nav,
+  .hero-nav {
+    border-bottom: 1px solid CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .hero-nav::after,
+  .portfolio-menu-topbar::after {
+    display: none;
+  }
+
+  .portfolio-menu-topbar,
   .menu-meta-resume a,
   .project-story,
   .expertise-row {
     border-color: CanvasText;
+  }
+
+  .portfolio-menu-topbar {
+    border-bottom: 1px solid CanvasText;
   }
 
   /* Scrims, grain, and the atmospheric fields are pure decoration and only add
@@ -3987,6 +4413,15 @@ html.is-loading .intro-loader {
     cursor: none;
   }
 
+  /* Reduced motion drops the portrait lens, so this surface has to give the
+     native cursor back. The site reticle stays hidden here (`data-pointer`). */
+  @media (prefers-reduced-motion: reduce) {
+    html[data-site-pointer="on"] .about-portrait,
+    html[data-site-pointer="on"] .about-portrait * {
+      cursor: auto;
+    }
+  }
+
   /* The About portrait swaps in a lens of its own and marks itself
      `data-pointer="hidden"`; two custom cursors at once is one too many. */
   .site-pointer {
@@ -4045,7 +4480,7 @@ html.is-loading .intro-loader {
   .site-pointer-ring {
     width: 30px;
     height: 30px;
-    margin: -15px 0 0 -15px;
+    margin: -0.9375rem 0 0 -0.9375rem;
     border: 1px solid rgba(255, 79, 24, 0.72);
     border-radius: 50%;
   }
@@ -4053,7 +4488,7 @@ html.is-loading .intro-loader {
   .site-pointer-frame {
     width: 46px;
     height: 46px;
-    margin: -23px 0 0 -23px;
+    margin: -1.4375rem 0 0 -1.4375rem;
     opacity: 0;
     transform: scale(0.62);
   }

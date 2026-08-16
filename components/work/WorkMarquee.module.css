@@ -13,12 +13,12 @@
 .meta {
   position: absolute;
   z-index: 2;
-  top: clamp(24px, 4vw, 56px);
-  right: clamp(20px, 3.4vw, 56px);
-  left: clamp(20px, 3.4vw, 56px);
+  top: clamp(1.5rem, 4vw, 3.5rem);
+  right: var(--gutter);
+  left: var(--gutter);
   display: flex;
   justify-content: space-between;
-  gap: 24px;
+  gap: 1.5rem;
   font-size: var(--type-label-sm);
   font-weight: 700;
   letter-spacing: var(--label-track-sm);
@@ -34,7 +34,12 @@
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: marquee-loop 38s linear infinite;
+  /* ~0.05 Hz — purposeful crawl without entering the ~0.2 Hz vestibular band. */
+  animation: marquee-loop 20s linear infinite;
+}
+
+.marquee[data-paused="true"] .track {
+  animation-play-state: paused;
 }
 
 .group {
@@ -46,7 +51,7 @@
   font-size: clamp(8rem, 22vw, 26rem);
   font-weight: 600;
   line-height: 0.78;
-  letter-spacing: -0.075em;
+  letter-spacing: var(--display-track-xl);
   white-space: nowrap;
 }
 
@@ -75,22 +80,23 @@
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 43.75em) {
   .marquee {
     min-height: 52svh;
   }
 
   .meta {
-    top: 22px;
+    top: 1.375rem;
   }
 
   .group {
     font-size: clamp(7rem, 31vw, 12rem);
     line-height: 0.82;
+    letter-spacing: var(--display-track-lg);
   }
 
   .track {
-    animation-duration: 28s;
+    animation-duration: 16s;
   }
 }
 

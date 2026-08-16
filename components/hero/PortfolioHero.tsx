@@ -5,6 +5,15 @@ import Lenis from "lenis";
 import { portfolioContent } from "@/lib/portfolio-content";
 import { useGsapClient } from "@/lib/use-gsap-client";
 import { setScrollController } from "@/lib/scroll-controller";
+import {
+  edgeStretch,
+  rubberbandIfOutOfBounds,
+  rubberbandedUnit,
+  Spring2D,
+  tickerDt,
+  unboundedProgress,
+  VelocityTracker,
+} from "@/lib/fluid-motion";
 import { Button04 } from "@/components/ui/animated-arrow-button";
 
 const FRAME_COUNT = 195;
@@ -207,15 +216,126 @@ export function PortfolioHero() {
       await Promise.all(Array.from({ length: constrained ? 2 : 6 }, worker));
     };
 
-    const onPointerMove = (event: PointerEvent) => {
+    const pointerSpring = new Spring2D(1, 0.35);
+    const pointerVelocity = new VelocityTracker();
+    let pointerCaptured = false;
+    let pointerOver = false;
+    let scrollGesture = false;
+    let pendingGesture: { pointerId: number; x: number; y: number } | undefined;
+    const parallaxX = -0.7;
+    const parallaxY = -0.45;
+    const gestureLockPx = 10;
+
+    const mapPointer = (event: PointerEvent) => {
       const rect = stage.getBoundingClientRect();
-      pointerRef.current.x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-      pointerRef.current.y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+      return {
+        x: rubberbandIfOutOfBounds(
+          ((event.clientX - rect.left) / rect.width - 0.5) * 2,
+          -1,
+          1,
+        ),
+        y: rubberbandIfOutOfBounds(
+          ((event.clientY - rect.top) / rect.height - 0.5) * 2,
+          -1,
+          1,
+        ),
+      };
+    };
+
+    const trackPointer = (event: PointerEvent) => {
+      const mapped = mapPointer(event);
+      pointerVelocity.add(mapped.x, mapped.y);
+      const velocity = pointerVelocity.velocity();
+      pointerSpring.setImmediate(mapped.x, mapped.y);
+      pointerSpring.setVelocity(velocity.x, velocity.y);
+      pointerRef.current.x = mapped.x;
+      pointerRef.current.y = mapped.y;
+    };
+
+    const releasePointer = () => {
+      pointerCaptured = false;
+      const velocity = pointerVelocity.velocity();
+      pointerSpring.dampingRatio = Math.hypot(velocity.x, velocity.y) > 1.2 ? 0.8 : 1;
+      pointerSpring.response = 0.35;
+      pointerSpring.setTarget(0, 0);
+      pointerSpring.setVelocity(velocity.x, velocity.y);
+      pointerVelocity.reset();
+    };
+
+    const isChromeTarget = (event: PointerEvent) => {
+      const target = event.target;
+      return target instanceof Element && Boolean(target.closest("a, button"));
+    };
+
+    const beginParallax = (event: PointerEvent) => {
+      pendingGesture = undefined;
+      scrollGesture = false;
+      pointerCaptured = true;
+      pointerOver = true;
+      stage.setPointerCapture(event.pointerId);
+      trackPointer(event);
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (isChromeTarget(event)) return;
+      scrollGesture = false;
+      pendingGesture = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+      };
+      // Mouse and pen already 1:1-track on move; capture so a drag past the
+      // stage edge does not drop. Touch waits for a 10px lock so a vertical
+      // scroll is not also a portrait grab.
+      if (event.pointerType !== "touch") beginParallax(event);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (scrollGesture && event.pointerId === pendingGesture?.pointerId) return;
+
+      if (
+        pendingGesture &&
+        event.pointerId === pendingGesture.pointerId &&
+        !pointerCaptured
+      ) {
+        const dx = event.clientX - pendingGesture.x;
+        const dy = event.clientY - pendingGesture.y;
+        if (Math.hypot(dx, dy) < gestureLockPx) return;
+        if (Math.abs(dy) >= Math.abs(dx)) {
+          scrollGesture = true;
+          return;
+        }
+        beginParallax(event);
+        return;
+      }
+
+      if (event.pointerType === "touch" && !pointerCaptured) return;
+
+      pointerOver = true;
+      trackPointer(event);
     };
 
     const onPointerLeave = () => {
-      pointerRef.current.x = 0;
-      pointerRef.current.y = 0;
+      pointerOver = false;
+      if (!pointerCaptured) releasePointer();
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      if (pendingGesture?.pointerId === event.pointerId) pendingGesture = undefined;
+      scrollGesture = false;
+      pointerCaptured = false;
+      if (stage.hasPointerCapture(event.pointerId)) {
+        stage.releasePointerCapture(event.pointerId);
+      }
+      const rect = stage.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      // Touch has no hover: lifting always returns the field home. Mouse
+      // keeps 1:1 tracking until the pointer actually leaves.
+      if (!inside || event.pointerType === "touch") releasePointer();
     };
 
     void Promise.all([loadFrame(0), loadFrame(96), loadFrame(FRAME_COUNT - 1)]).then(() => {
@@ -226,8 +346,13 @@ export function PortfolioHero() {
     });
     void preloadSequence();
     window.addEventListener("resize", resizeCanvas);
-    stage.addEventListener("pointermove", onPointerMove, { passive: true });
-    stage.addEventListener("pointerleave", onPointerLeave);
+    if (!reducedMotion) {
+      stage.addEventListener("pointerdown", onPointerDown);
+      stage.addEventListener("pointermove", onPointerMove, { passive: true });
+      stage.addEventListener("pointerleave", onPointerLeave);
+      stage.addEventListener("pointerup", onPointerUp);
+      stage.addEventListener("pointercancel", onPointerUp);
+    }
 
     const animationContext = gsap.context(() => {
       if (reducedMotion) {
@@ -236,33 +361,42 @@ export function PortfolioHero() {
         return;
       }
 
-      const moveX = gsap.quickTo(layer, "xPercent", {
-        duration: 0.8,
-        ease: "power3.out",
-      });
-      const moveY = gsap.quickTo(layer, "yPercent", {
-        duration: 0.8,
-        ease: "power3.out",
-      });
-
-      pointerParallax = () => {
-        moveX(pointerRef.current.x * -0.7);
-        moveY(pointerRef.current.y * -0.45);
+      const pointerParallaxTick = () => {
+        if (!pointerCaptured && !pointerOver) {
+          pointerSpring.step(tickerDt(gsap.ticker));
+          pointerRef.current.x = pointerSpring.x.value;
+          pointerRef.current.y = pointerSpring.y.value;
+        }
+        gsap.set(layer, {
+          xPercent: pointerSpring.x.value * parallaxX,
+          yPercent: pointerSpring.y.value * parallaxY,
+        });
       };
-      gsap.ticker.add(pointerParallax);
+      pointerParallax = pointerParallaxTick;
+      gsap.ticker.add(pointerParallaxTick);
 
       const timeline = gsap.timeline({
-        defaults: { ease: "power4.inOut" },
+        defaults: { ease: "none" },
         scrollTrigger: {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.18,
+          scrub: true,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
-            progressRef.current = self.progress;
-            drawFrame(self.progress * (FRAME_COUNT - 1));
-            gsap.set(progressBar, { scaleX: self.progress });
+            const range = Math.max(1, self.end - self.start);
+            const progress = rubberbandedUnit(
+              unboundedProgress(self.scroll(), self.start, self.end),
+              range,
+            );
+            progressRef.current = Math.max(0, Math.min(1, progress));
+            drawFrame(progress * (FRAME_COUNT - 1));
+            const stretch = edgeStretch(progress);
+            canvas.style.transform =
+              stretch === 0
+                ? ""
+                : `translate3d(0, ${stretch * -56}px, 0) scale(${1 + Math.abs(stretch) * 0.045})`;
+            gsap.set(progressBar, { scaleX: Math.max(0, Math.min(1, progress)) });
           },
         },
       });
@@ -278,8 +412,10 @@ export function PortfolioHero() {
           1.2,
         );
 
+      // Lerp is the only smoother: frames scrub 1:1 against this position.
+      // A duration here plus ScrollTrigger scrub stacked two catch-up delays.
       lenis = new Lenis({
-        duration: 1.05,
+        lerp: 0.18,
         smoothWheel: true,
         touchMultiplier: 1.15,
       });
@@ -302,8 +438,11 @@ export function PortfolioHero() {
       setScrollController(null);
       lenis?.destroy();
       window.removeEventListener("resize", resizeCanvas);
+      stage.removeEventListener("pointerdown", onPointerDown);
       stage.removeEventListener("pointermove", onPointerMove);
       stage.removeEventListener("pointerleave", onPointerLeave);
+      stage.removeEventListener("pointerup", onPointerUp);
+      stage.removeEventListener("pointercancel", onPointerUp);
     };
   }, [gsapModules]);
 
@@ -315,8 +454,9 @@ export function PortfolioHero() {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // The focus field is atmosphere layered over the frame sequence. It is the
     // first thing to go when motion is unwanted or bytes are expensive.
-    if (reducedMotion || isConstrainedConnection()) return;
+    if (reducedMotion || isConstrainedConnection() || !gsapModules) return;
 
+    const gsap = gsapModules.gsap;
     let cancelled = false;
     let disposeScene = () => undefined;
 
@@ -408,6 +548,7 @@ export function PortfolioHero() {
       scene.add(hotLight);
 
       let rafId = 0;
+      let tickerAttached = false;
       let contextLost = false;
 
       /*
@@ -419,10 +560,13 @@ export function PortfolioHero() {
       const onContextLost = (event: Event) => {
         event.preventDefault();
         contextLost = true;
+        if (tickerAttached) {
+          gsap.ticker.remove(render);
+          tickerAttached = false;
+        }
         window.cancelAnimationFrame(rafId);
         canvas.style.display = "none";
       };
-      canvas.addEventListener("webglcontextlost", onContextLost);
 
       const resize = () => {
         const rect = stage.getBoundingClientRect();
@@ -435,28 +579,31 @@ export function PortfolioHero() {
         if (cancelled || contextLost) return;
         const progress = progressRef.current;
         const pointer = pointerRef.current;
+        // Same 1:1 pointer/progress the frame layer uses. A follow lerp here
+        // made reverse a chase, not a grab; the pointer spring already settles.
 
-        camera.position.x += (pointer.x * 0.16 - camera.position.x) * 0.045;
-        camera.position.y += (pointer.y * -0.11 - camera.position.y) * 0.045;
-        focusField.rotation.y += (progress * 1.05 + pointer.x * 0.12 - focusField.rotation.y) * 0.05;
-        focusField.rotation.z += (-0.18 + progress * 0.62 - focusField.rotation.z) * 0.045;
-        focusField.position.x +=
-          (-2.35 + Math.sin(progress * Math.PI) * 0.48 - focusField.position.x) * 0.04;
-        points.rotation.z -= 0.0008;
+        camera.position.x = pointer.x * 0.16;
+        camera.position.y = pointer.y * -0.11;
+        focusField.rotation.y = progress * 1.05 + pointer.x * 0.12;
+        focusField.rotation.z = -0.18 + progress * 0.62;
+        focusField.position.x = -2.35 + Math.sin(progress * Math.PI) * 0.48;
 
         ringMaterials.forEach((material, index) => {
           material.opacity = 0.16 + Math.sin(progress * Math.PI + index * 0.35) * 0.1;
         });
 
         renderer.render(scene, camera);
-        rafId = window.requestAnimationFrame(render);
       };
+
+      canvas.addEventListener("webglcontextlost", onContextLost);
 
       resize();
       window.addEventListener("resize", resize);
-      render();
+      gsap.ticker.add(render);
+      tickerAttached = true;
 
       disposeScene = () => {
+        if (tickerAttached) gsap.ticker.remove(render);
         window.cancelAnimationFrame(rafId);
         window.removeEventListener("resize", resize);
         canvas.removeEventListener("webglcontextlost", onContextLost);
@@ -477,7 +624,7 @@ export function PortfolioHero() {
       cancelled = true;
       disposeScene();
     };
-  }, []);
+  }, [gsapModules]);
 
   return (
     <section ref={sectionRef} id="home" className="hero-sequence" aria-labelledby="hero-title">

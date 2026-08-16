@@ -1,0 +1,50 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-08-12T19:04:43.730Z",
+        "reason": "Documented body face in DESIGN.md typography; Syne carries the display voice"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-08-12T19:04:43.777Z",
+        "reason": "Fallback-stack entry only, never the display face"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(4, 14, 18, 0.3)",
+        "createdAt": "2026-08-12T19:04:51.951Z",
+        "reason": "Documented print-lift shadow, light-register exception in DESIGN.md"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(4, 14, 18, 0.48)",
+        "createdAt": "2026-08-12T19:04:52.007Z",
+        "reason": "Documented media scrim, light-register exception in DESIGN.md"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(4, 14, 18, 0.74)",
+        "createdAt": "2026-08-12T19:04:52.043Z",
+        "reason": "Documented media scrim, light-register exception in DESIGN.md"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "3vw,",
+        "createdAt": "2026-08-12T19:04:52.080Z",
+        "reason": "Fragment of clamp(26px, 3vw, 48px), which is rounded.panel verbatim"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "26px",
+        "createdAt": "2026-08-12T19:04:52.115Z",
+        "reason": "Fragment of clamp(26px, 3vw, 48px), which is rounded.panel verbatim"
+      }
+    ]
+  }
+}

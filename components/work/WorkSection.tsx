@@ -134,70 +134,111 @@ export function WorkSection() {
               trigger: section,
               start: "top bottom",
               end: "top top",
-              scrub: 0.3,
+              // 1:1 with scroll — lag here reads as latency, not momentum.
+              scrub: true,
               invalidateOnRefresh: true,
             },
           })
           // Held shut for the first stretch, so the release reads as a blade
           // letting go rather than as the orange drifting off with the scroll.
           .to({}, { duration: 0.42 })
-          .to("[data-shutter-edge]", { scaleX: 0, duration: 0.14 }, 0.42)
+          .to("[data-shutter-edge]", { scaleX: 0, duration: 0.14, ease: "none" }, 0.42)
           .to(
             "[data-shutter-blade]",
-            { yPercent: 100, duration: 0.58, ease: "power2.in" },
+            { yPercent: 100, duration: 0.58, ease: "none" },
             0.42,
           );
       }
 
       /*
        * Chapter reveals are exposures, not arrivals: a hard-edged wipe along
-       * one axis, matching the shutter above and the seam in the intro. The
-       * previous `y + autoAlpha` entrance ran identically on five different
-       * blocks, which read as a single template rather than as this system.
+       * one axis, matching the shutter above and the seam in the intro.
+       *
+       * Enter and leave both use power2.out from the live value — GSAP's
+       * `reverse` time-reverses ease-out into an accelerating close, which
+       * breaks Apple's mirrored-path rule. Explicit leave tweens keep the
+       * same decelerating character on the way out.
        */
       const expose = (
-        targets: string,
+        targets: string | Element | NodeListOf<Element> | Element[],
         options: {
-          trigger: string;
-          axis: "x" | "y";
+          trigger: Element | string;
+          closed: string;
+          open: string;
           duration?: number;
           stagger?: number;
           start?: string;
+          clearClip?: boolean;
         },
       ) => {
-        const closed =
-          options.axis === "x" ? "inset(0 100% 0 0)" : "inset(0 0 100% 0)";
-        gsap.fromTo(
-          targets,
-          { clipPath: closed, willChange: "clip-path" },
-          {
-            clipPath: "inset(0 0% 0% 0)",
-            duration: options.duration ?? 0.86,
-            stagger: options.stagger ?? 0,
-            ease: "power3.out",
+        const duration = options.duration ?? 0.48;
+        const stagger = options.stagger ?? 0;
+        const elements = gsap.utils.toArray<HTMLElement>(targets);
+        if (elements.length === 0) return;
+
+        gsap.set(elements, {
+          clipPath: options.closed,
+          ...(options.clearClip ? { willChange: "clip-path" } : null),
+        });
+
+        const toState = (open: boolean) => {
+          if (!open && options.clearClip) {
+            // Open may have cleared clip-path so focus rings can overflow.
+            // Re-arm from the fully open inset before closing, otherwise GSAP
+            // has nothing to interpolate from and the wipe pops shut.
+            elements.forEach((element) => {
+              const current = gsap.getProperty(element, "clipPath");
+              if (!current || current === "none") {
+                gsap.set(element, { clipPath: options.open });
+              }
+            });
+          }
+
+          gsap.to(elements, {
+            clipPath: open ? options.open : options.closed,
+            duration,
+            stagger: open ? stagger : stagger * 0.55,
+            ease: "power2.out",
+            overwrite: "auto",
             // Focus rings and the arrow-button glyph overflow their boxes, so
-            // the clip cannot survive the animation.
-            clearProps: "clipPath,willChange",
-            scrollTrigger: {
-              trigger: options.trigger,
-              start: options.start ?? "top 78%",
+            // the clip cannot survive the open state.
+            onStart: () => {
+              if (options.clearClip) {
+                gsap.set(elements, { willChange: "clip-path" });
+              }
             },
-          },
-        );
+            onComplete: () => {
+              if (open && options.clearClip) {
+                gsap.set(elements, { clearProps: "clipPath,willChange" });
+              }
+            },
+          });
+        };
+
+        ScrollTrigger.create({
+          trigger: options.trigger,
+          start: options.start ?? "top 78%",
+          onEnter: () => toState(true),
+          onLeaveBack: () => toState(false),
+        });
       };
 
       expose(".work-kicker, .work-intro", {
         trigger: ".work-introduction",
-        axis: "x",
+        closed: "inset(0 100% 0 0)",
+        open: "inset(0 0% 0% 0)",
         stagger: 0.09,
+        clearClip: true,
       });
 
       expose(".work-tools-kicker, .work-tools-loop", {
         trigger: ".work-tools",
-        axis: "x",
+        closed: "inset(0 100% 0 0)",
+        open: "inset(0 0% 0% 0)",
         duration: 0.78,
         stagger: 0.09,
         start: "top 85%",
+        clearClip: true,
       });
 
       const cards = gsap.utils.toArray<HTMLElement>(".project-story");
@@ -210,38 +251,25 @@ export function WorkSection() {
         const detail = card.querySelector(".project-detail-image");
 
         if (media) {
-          gsap.fromTo(
-            media,
-            { clipPath: "inset(14% 0 14% 0 round 28px)" },
-            {
-              clipPath: "inset(0% 0 0% 0 round 28px)",
-              duration: 1.15,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: card,
-                start: "top 78%",
-              },
-            },
-          );
+          expose(media, {
+            trigger: card,
+            closed: "inset(14% 0 14% 0 round 28px)",
+            open: "inset(0% 0 0% 0 round 28px)",
+            duration: 0.55,
+          });
         }
 
         // Same exposure verb as the chapter opener, turned 90°: the copy
         // column is read top-to-bottom, so it is uncovered top-to-bottom.
-        gsap.fromTo(
-          copy,
-          { clipPath: "inset(0 0 100% 0)", willChange: "clip-path" },
-          {
-            clipPath: "inset(0 0% 0% 0)",
-            duration: 0.72,
-            stagger: 0.065,
-            ease: "power3.out",
-            clearProps: "clipPath,willChange",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 70%",
-            },
-          },
-        );
+        expose(copy, {
+          trigger: card,
+          closed: "inset(0 0 100% 0)",
+          open: "inset(0 0% 0% 0)",
+          duration: 0.48,
+          stagger: 0.065,
+          start: "top 70%",
+          clearClip: true,
+        });
 
         if (visual) {
           gsap.fromTo(
@@ -254,7 +282,7 @@ export function WorkSection() {
                 trigger: card,
                 start: "top bottom",
                 end: "bottom top",
-                scrub: 0.7,
+                scrub: true,
               },
             },
           );
@@ -272,7 +300,7 @@ export function WorkSection() {
                 trigger: card,
                 start: "top bottom",
                 end: "bottom top",
-                scrub: 0.8,
+                scrub: true,
               },
             },
           );
@@ -383,7 +411,7 @@ export function WorkSection() {
                   src={project.poster}
                   alt=""
                   fill
-                  sizes="(max-width: 900px) 100vw, 62vw"
+                  sizes="(max-width: 56.25em) 100vw, 62vw"
                   unoptimized
                 />
                 {/* The sr-only figcaption below already carries videoLabel and
@@ -409,7 +437,7 @@ export function WorkSection() {
                   src={project.detail}
                   alt={project.detailAlt}
                   fill
-                  sizes="(max-width: 620px) 42vw, 16vw"
+                  sizes="(max-width: 38.75em) 42vw, 16vw"
                   unoptimized
                 />
               </div>
@@ -495,11 +523,11 @@ export function WorkSection() {
         <LogoLoop
           className="work-tools-loop"
           logos={toolLogos}
-          speed={90}
+          speed={72}
           direction="left"
           logoHeight={34}
           gap={64}
-          hoverSpeed={0}
+          hoverSpeed={20}
           scaleOnHover
           ariaLabel="Tools and technology used to design and build this portfolio"
         />

@@ -21,31 +21,31 @@ colors:
 typography:
   display:
     fontFamily: "'Syne Variable', 'Syne Fallback', 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: "clamp(64px, 9.6vw, 164px)"
+    fontSize: "clamp(4rem, 9.6vw, 10.25rem)"
     fontWeight: 700
     lineHeight: 0.84
     letterSpacing: "-0.065em"
   headline:
     fontFamily: "'Syne Variable', 'Syne Fallback', 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: "clamp(48px, 5.7vw, 100px)"
+    fontSize: "clamp(3rem, 5.7vw, 6.25rem)"
     fontWeight: 600
     lineHeight: 0.9
     letterSpacing: "-0.055em"
   title:
     fontFamily: "'Syne Variable', 'Syne Fallback', 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: "clamp(25px, 2.45vw, 40px)"
+    fontSize: "clamp(1.5625rem, 2.45vw, 2.5rem)"
     fontWeight: 600
     lineHeight: 1.1
     letterSpacing: "-0.015em"
   body:
     fontFamily: "'Inter Variable', 'Inter Fallback', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: "clamp(16px, 1.25vw, 20px)"
+    fontSize: "clamp(1rem, 0.376vw + 0.912rem, 1.25rem)"
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "normal"
   label:
     fontFamily: "'Inter Variable', 'Inter Fallback', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: "clamp(12px, 1vw, 15px)"
+    fontSize: "clamp(0.75rem, 0.19vw + 0.70625rem, 0.9375rem)"
     fontWeight: 700
     lineHeight: 1.35
     letterSpacing: "0.12em"
@@ -66,20 +66,21 @@ shadows:
   media-scrim-deep: "rgba(4, 14, 18, 0.74)"
   accent-glow: "0 0 24px rgba(255, 79, 24, 0.4)"
 spacing:
-  xs: "4px"
-  sm: "14px"
-  md: "26px"
-  lg: "clamp(26px, 3.3vw, 62px)"
-  xl: "clamp(104px, 12vw, 188px)"
-  xxl: "clamp(140px, 15vw, 240px)"
+  gutter: "clamp(1.25rem, 3.4vw, 3.5rem)"
+  xs: "0.25rem"
+  sm: "0.875rem"
+  md: "1.625rem"
+  lg: "clamp(1.625rem, 3.3vw, 3.875rem)"
+  xl: "clamp(6.5rem, 12vw, 11.75rem)"
+  xxl: "clamp(8.75rem, 15vw, 15rem)"
 components:
   button-primary:
     backgroundColor: "{colors.kinetic-orange}"
     textColor: "{colors.ink}"
     typography: "{typography.label}"
     rounded: "{rounded.none}"
-    padding: "0 17px"
-    height: "48px"
+    padding: "0 1.0625rem"
+    minHeight: "3rem"
   button-primary-hover:
     backgroundColor: "{colors.white}"
     textColor: "{colors.kinetic-orange}"
@@ -87,8 +88,8 @@ components:
     textColor: "{colors.white}"
     typography: "{typography.label}"
     rounded: "{rounded.none}"
-    padding: "0 17px"
-    height: "48px"
+    padding: "0 1.0625rem"
+    minHeight: "3rem"
   button-secondary-hover:
     textColor: "{colors.kinetic-orange}"
   button-arrow:
@@ -102,7 +103,7 @@ components:
   chip-proof:
     textColor: "{colors.stone}"
     rounded: "{rounded.pill}"
-    padding: "9px 12px"
+    padding: "0.5625rem 0.75rem"
   media-frame:
     backgroundColor: "{colors.graphite}"
     rounded: "{rounded.media}"
@@ -178,13 +179,17 @@ Both faces are self-hosted from `@fontsource-variable/*` and imported at the top
 
 ### Hierarchy
 
-- **Display** (700, `clamp(64px, 9.6vw, 164px)`, line-height 0.84, tracking `-0.065em`, uppercase): The hero `h1` and chapter openers. Set tight enough that lines nearly touch — the block reads as a mass, not as sentences.
-- **Headline** (600, `clamp(48px, 5.7vw, 100px)`, line-height 0.9, tracking `-0.055em`, uppercase): Section titles and the About lead. The Work heading runs larger still at `clamp(56px, 7.6vw, 144px)`.
-- **Title** (600, `clamp(25px, 2.45vw, 40px)`, line-height 1.1): Project titles and expertise area names.
-- **Body** (400, `clamp(16px, 1.25vw, 20px)`, line-height 1.55, max 36ch–65ch): Narrative paragraphs and project descriptions. Measure is capped tightly — the Work intro holds at `36ch`.
-- **Label** (700, `clamp(12px, 1vw, 15px)`, tracking `0.12em`, uppercase): Metadata keys, navigation, status lines, button text. This is the system's connective tissue and appears more often than any other role.
+Every size in this system is expressed in `rem`, and there is deliberately no `html { font-size }` anywhere in the stylesheet. That absence is load-bearing: it is what lets the whole scale inherit the reader's browser text-size setting instead of overriding it. Setting a root font size — even to `100%` — would not break the scale, but adding one in `px` would silently cancel the entire behaviour described here.
 
-**The 11px Floor.** No functional text renders below `11px` at any breakpoint. The system previously ran label type down to 8px on mobile controls; that is now the hard minimum, including inside buttons.
+- **Display** (700, `clamp(4rem, 9.6vw, 10.25rem)`, line-height 0.84, tracking `-0.065em`, uppercase): The hero `h1` and chapter openers. Set tight enough that lines nearly touch — the block reads as a mass, not as sentences.
+- **Headline** (600, `clamp(3rem, 5.7vw, 6.25rem)`, line-height 0.9, tracking `-0.055em`, uppercase): Section titles and the About lead. The Work heading runs larger still at `clamp(3.5rem, 7.6vw, 9rem)`.
+- **Title** (600, `clamp(1.5625rem, 2.45vw, 2.5rem)`, line-height 1.1): Project titles and expertise area names.
+- **Body** (400, `clamp(1rem, 0.376vw + 0.912rem, 1.25rem)`, line-height 1.55, max 36ch–65ch): Narrative paragraphs and project descriptions. Measure is capped tightly — the Work intro holds at `36ch`.
+- **Label** (700, `--type-label`, `clamp(0.75rem, 0.19vw + 0.70625rem, 0.9375rem)`, tracking `0.12em`, uppercase): Metadata keys, navigation, status lines, button text. This is the system's connective tissue and appears more often than any other role. A secondary step, `--type-label-sm`, carries indices, data keys and captions.
+
+**Two shapes of clamp, and the difference is deliberate.** Body and label roles use a `rem + vw` middle term, so they answer both the viewport and the reader. Display roles keep a pure `vw` middle and convert only their bounds. A pure `vw` term passes through the origin, so re-anchoring it to `rem + vw` does not recover a hidden intercept — it invents a different curve, and on this site it moves the hero from 80px to 104px at a 1280px viewport, which breaks a three-line composition that was measured against the real face. Display type functions as a graphic element and stays viewport-proportional in the mid-range; it still answers the text setting at the narrow and wide ends, where the clamp is pinned and where a large-text reader actually is.
+
+**The 0.6875rem Floor.** No functional text renders below `0.6875rem` at any breakpoint — 11px at the default setting, and proportionally larger for a reader who has asked for larger text. The system previously ran label type down to 8px on mobile controls; that is now the hard minimum, including inside buttons. The floor is stated in `rem` precisely so that it scales *with* the reader rather than capping them.
 
 ### Named Rules
 
@@ -200,15 +205,17 @@ A single continuous route (`app/page.tsx`) composed of full-bleed chapters, each
 
 **Chapter sequence:** fixed intro overlay (100svh) → persistent three-part header → pinned hero (500svh scroll length, 100svh sticky stage; 440svh on mobile) → full-bleed About chapter → Work marquee → Work stories → Contact.
 
-**Containers:** The Work chapter caps at `1800px` and centers; other chapters run full-bleed. Section padding is `clamp(104px, 12vw, 188px)` block, `clamp(20px, 3.4vw, 56px)` inline.
+**Containers:** The Work chapter caps at `1800px` and centers; other chapters run full-bleed. Section padding is `clamp(6.5rem, 12vw, 11.75rem)` block, and inline padding is the `--gutter` token — `clamp(1.25rem, 3.4vw, 3.5rem)`, one value behind all 23 call sites where content meets the viewport edge.
 
-**Grid:** Project stories use an asymmetric three-column grid — `46px` rail, then `7fr` and `4fr` (minimum `340px`) — with the two columns swapped for the second project so the chapter alternates direction. Gutter is `clamp(26px, 3.3vw, 62px)`; stories are separated by `clamp(140px, 15vw, 240px)`.
+**Grid:** Project stories use an asymmetric three-column grid — `46px` rail, then `7fr` and `4fr` (minimum `340px`) — with the two columns swapped for the second project so the chapter alternates direction. Gutter is `clamp(1.625rem, 3.3vw, 3.875rem)`; stories are separated by `clamp(8.75rem, 15vw, 15rem)`. Grid track minima stay in `px` on purpose: they are structural floors that stop a column collapsing, and scaling them with text would push a multi-column row past the viewport instead of letting its text wrap.
 
 **Header:** Strict left/center/right — wordmark, Menu trigger, orange collaboration action. The menu overlay is a near-black full-viewport editorial layer: oversized links first, metadata and a contextual 4:5 portrait (capped `452px`) second. On narrow screens the visual and meta content collapses below the links and the portrait returns to a compact landscape ratio.
 
-**Breakpoints:** `620px` and `900px` are the primary hinges (with `901px` for desktop-only rules); `520px`, `680px`, `720px`, `820px`, and `950px` handle local adjustments; `1800px` caps the Work container.
+**Breakpoints:** Stated in `em`, not `px`. `38.75em` (620) and `56.25em` (900) are the primary hinges, with `56.3125em` (901) for desktop-only rules; `21.25em` (340), `42.5em` (680), `43.75em` (700), `45em` (720), `51.25em` (820) and `68.75em` (1100) handle local adjustments, alongside height hinges at `31.25em` (500), `43.75em` (700) and `47.5em` (760). `1800px` caps the Work container and stays in `px` — it is a container maximum, not a reading threshold.
 
-**Responsive behavior:** Desktop runs a three-column hero composition with copy left/center and portrait mass right. Tablet collapses to single-column copy with role metadata anchored low. Mobile compresses the hero sequence, simplifies metadata, and *increases* proportional type size — display type gets relatively larger as the viewport narrows (`clamp(48px, 16vw, 76px)` patterns), never smaller.
+`em` in a media query resolves against the *browser default* font size and deliberately ignores `html { font-size }`. That is the right anchor — it follows the reader's actual browser setting — but it has a testing consequence: scripting `document.documentElement.style.fontSize` exercises the `rem` type scale without moving these breakpoints at all. Verifying them needs CDP `Page.setFontSizes` or a real change in the browser's font settings.
+
+**Responsive behavior:** Desktop runs a three-column hero composition with copy left/center and portrait mass right. Tablet collapses to single-column copy with role metadata anchored low. Mobile compresses the hero sequence, simplifies metadata, and *increases* proportional type size — display type gets relatively larger as the viewport narrows (`clamp(2.875rem, 15vw, 4.125rem)` patterns), never smaller.
 
 ### Named Rules
 
@@ -246,6 +253,8 @@ Radius is reserved for two jobs:
 
 Borders are hairlines — `1px solid rgba(255, 255, 255, 0.24)` on dark, `1px solid rgba(17, 21, 22, 0.2)` on paper. There is no heavy stroke anywhere in the system.
 
+**What stays in `px`.** Type and the space around type are in `rem`; everything physical or optical is not. Hairlines and borders, corner radii, `outline-offset`, `box-shadow` geometry, `backdrop-filter` blur radii, `transform` offsets, both wordmarks, icon and glyph boxes, the reveal cursor and site pointer, grid track minima, and page maximums all stay in `px`. The test is whether the value describes text or describes a physical thing: a 1px rule is a hairline at any text size, and a 24x12px menu glyph that grew with the label beside it would just come apart. Sub-4px spacing values are also left alone — those are optical corrections, not rhythm.
+
 ### Named Rules
 
 **The Zero-Radius Rule.** If it can be clicked, its corners are square. A rounded button is not this system.
@@ -256,15 +265,15 @@ Borders are hairlines — `1px solid rgba(255, 255, 255, 0.24)` on dark, `1px so
 
 ### Buttons
 
-- **Shape:** Square (`0` radius), minimum height `48px`, `0 17px` padding, uppercase label type at `10px`/`0.09em`.
-- **Primary:** Orange fill, ink text (`#ff4f18` on text `#050505`), minimum width `152px`.
-- **Secondary:** Transparent with a `1px` bottom hairline at `rgba(255, 255, 255, 0.72)`, minimum width `172px`.
+- **Shape:** Square (`0` radius), minimum height `3rem`, `0 1.0625rem` padding, uppercase label type at `--type-label`/`--label-track`. Height is a *minimum*, never a fixed height — a control has to be able to grow around a label the reader has enlarged.
+- **Primary:** Orange fill, ink text (`#ff4f18` on text `#050505`), minimum width `9.5rem`.
+- **Secondary:** Transparent with a `1px` bottom hairline at `rgba(255, 255, 255, 0.72)`, minimum width `10.75rem`.
 - **Hover:** Both lift `translateY(-2px)` over `220ms ease`. Primary inverts to white ground with orange text; secondary shifts text and border to orange. The lift is the same for both — only the color logic differs.
 - **Arrow button (`button04`):** The signature action. Square, uppercase, weight 750, tracking `0.075em`, with a masked northeast-arrow glyph that swaps on hover over `320ms cubic-bezier(0.76, 0, 0.24, 1)`. Variants: `brand` (orange/ink), `light` (white/ink → orange on active), `dark` (graphite/white → orange on active).
 
 ### Chips
 
-- **Proof chips:** Pill (`999px`), `9px 12px` padding, `1px` hairline at `rgba(17, 21, 22, 0.2)`, stone text. Light register only. Non-interactive — they are evidence labels, not filters.
+- **Proof chips:** Pill (`999px`), `0.5625rem 0.75rem` padding, `1px` hairline at `rgba(17, 21, 22, 0.2)`, stone text. Light register only. Non-interactive — they are evidence labels, not filters.
 
 ### Cards / Containers
 

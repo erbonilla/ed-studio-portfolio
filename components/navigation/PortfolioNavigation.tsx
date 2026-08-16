@@ -91,13 +91,20 @@ export function PortfolioNavigation() {
   const [previewId, setPreviewId] = useState<NavigationId>("home");
   const [currentId, setCurrentId] = useState<NavigationId>("home");
   const [navTheme, setNavTheme] = useState<"dark" | "light">("dark");
+  const restoreMenuFocusRef = useRef(false);
 
   const activeItem =
     navigationItems.find((item) => item.id === previewId) ?? navigationItems[0];
 
   const openMenu = (id: NavigationId = "home") => {
+    restoreMenuFocusRef.current = false;
     setPreviewId(id);
     setIsOpen(true);
+  };
+
+  const closeMenu = () => {
+    restoreMenuFocusRef.current = true;
+    setIsOpen(false);
   };
 
   const visit = (id: NavigationId) => {
@@ -106,21 +113,24 @@ export function PortfolioNavigation() {
 
     if (!destination) return;
 
+    // Unlock scroll immediately. Waiting on the close timeline added a 360ms
+    // seam between the click and motion; the sheet can still animate out
+    // while Lenis moves the page underneath.
+    restoreMenuFocusRef.current = false;
+    document.documentElement.classList.remove("menu-open");
     setIsOpen(false);
-    window.setTimeout(() => {
-      scrollToSection(destination);
-      // Write the hash so the section is linkable and browser-back works,
-      // without triggering a second native jump.
-      if (window.location.hash !== `#${id}`) {
-        window.history.pushState(null, "", `#${id}`);
-      }
-    }, isOpen ? 360 : 0);
+    scrollToSection(destination);
+    // Write the hash so the section is linkable and browser-back works,
+    // without triggering a second native jump.
+    if (window.location.hash !== `#${id}`) {
+      window.history.pushState(null, "", `#${id}`);
+    }
   };
 
-  // The header sits over five chapters in two registers. Its gradient and
-  // hairline are tuned for near-black, so over the orange marquee, the orange
-  // About portrait, and the cream Work chapter the wordmark and CTA vanish.
-  // Any element marked data-nav-theme="light" flips the bar while it is under
+  // The header sits over five chapters in two registers. Its frost fill is
+  // tuned for near-black, so over the orange marquee, the orange About
+  // portrait, and the cream Work chapter the wordmark and CTA vanish. Any
+  // element marked data-nav-theme="light" flips the bar while it is under
   // the header band.
   useEffect(() => {
     const marked = Array.from(
@@ -213,40 +223,56 @@ export function PortfolioNavigation() {
       page.classList.add("menu-open");
       overlay.setAttribute("aria-hidden", "false");
 
+      const closedClip = "inset(0 0 100% 0 round 0 0 32px 32px)";
+      const openClip = "inset(0 0 0% 0 round 0 0 32px 32px)";
+      const clip = String(gsap.getProperty(overlay, "clipPath") || "");
+      const visibility = String(gsap.getProperty(overlay, "visibility") || "");
+      const startsClosed =
+        visibility === "hidden" || clip.includes("100%") || clip === "none" || clip === "";
+
+      /*
+       * Animate from the live presentation value. fromTo() re-armed every open
+       * at the fully-closed clip, so grabbing a closing sheet and reopening
+       * jumped shut before sliding open again.
+       */
+      if (startsClosed) {
+        gsap.set(overlay, {
+          visibility: "visible",
+          pointerEvents: "auto",
+          clipPath: closedClip,
+        });
+        gsap.set(closeLines, {
+          rotation: 0,
+          y: (index: number) => (index === 0 ? -4 : 4),
+        });
+        gsap.set(links, { autoAlpha: 0, y: 42 });
+        gsap.set(details, { autoAlpha: 0, y: 20 });
+      } else {
+        gsap.set(overlay, { visibility: "visible", pointerEvents: "auto" });
+      }
+
       const timeline = gsap.timeline({
         defaults: { ease: "power4.inOut" },
-        onStart: () => {
-          gsap.set(overlay, { visibility: "visible", pointerEvents: "auto" });
-        },
         onComplete: () => closeButtonRef.current?.focus(),
       });
 
       timeline
-        .fromTo(
-          overlay,
-          { clipPath: "inset(0 0 100% 0 round 0 0 32px 32px)" },
-          {
-            clipPath: "inset(0 0 0% 0 round 0 0 32px 32px)",
-            duration: reducedMotion ? 0.01 : 0.82,
-          },
-        )
-        .fromTo(
+        .to(overlay, {
+          clipPath: openClip,
+          duration: reducedMotion ? 0.01 : 0.82,
+        })
+        .to(
           closeLines,
           {
-            rotation: 0,
-            y: (index) => (index === 0 ? -4 : 4),
-          },
-          {
-            rotation: (index) => (index === 0 ? 45 : -45),
+            rotation: (index: number) => (index === 0 ? 45 : -45),
             y: 0,
             duration: reducedMotion ? 0.01 : 0.42,
             ease: "power3.inOut",
           },
           reducedMotion ? 0 : 0.16,
         )
-        .fromTo(
+        .to(
           links,
-          { autoAlpha: 0, y: 42 },
           {
             autoAlpha: 1,
             y: 0,
@@ -256,9 +282,8 @@ export function PortfolioNavigation() {
           },
           reducedMotion ? 0 : 0.28,
         )
-        .fromTo(
+        .to(
           details,
-          { autoAlpha: 0, y: 20 },
           {
             autoAlpha: 1,
             y: 0,
@@ -280,6 +305,10 @@ export function PortfolioNavigation() {
     const timeline = gsap.timeline({
       onComplete: () => {
         gsap.set(overlay, { visibility: "hidden", pointerEvents: "none" });
+        if (restoreMenuFocusRef.current) {
+          restoreMenuFocusRef.current = false;
+          menuButtonRef.current?.focus();
+        }
       },
     });
 
@@ -288,7 +317,7 @@ export function PortfolioNavigation() {
         closeLines,
         {
           rotation: 0,
-          y: (index) => (index === 0 ? -4 : 4),
+          y: (index: number) => (index === 0 ? -4 : 4),
           duration: reducedMotion ? 0.01 : 0.28,
           ease: "power2.inOut",
         },
@@ -317,8 +346,7 @@ export function PortfolioNavigation() {
       if (!overlay) return;
 
       if (event.key === "Escape") {
-        setIsOpen(false);
-        window.setTimeout(() => menuButtonRef.current?.focus(), 360);
+        closeMenu();
         return;
       }
 
@@ -432,8 +460,7 @@ export function PortfolioNavigation() {
             className="menu-close"
             type="button"
             onClick={() => {
-              setIsOpen(false);
-              window.setTimeout(() => menuButtonRef.current?.focus(), 360);
+              closeMenu();
             }}
           >
             <span>Close</span>
@@ -562,7 +589,7 @@ export function PortfolioNavigation() {
                 src={activeItem.frame}
                 alt=""
                 fill
-                sizes="(max-width: 900px) 100vw, 38vw"
+                sizes="(max-width: 56.25em) 100vw, 38vw"
                 loading="eager"
                 unoptimized
               />

@@ -24,9 +24,9 @@
   isolation: isolate;
   -webkit-tap-highlight-color: transparent;
   transition:
-    color 320ms cubic-bezier(0.76, 0, 0.24, 1),
-    border-color 320ms ease,
-    transform 220ms ease;
+    color 100ms ease-out,
+    border-color 100ms ease-out,
+    transform 100ms ease-out;
 }
 
 .button04[data-variant="brand"] {
@@ -72,18 +72,18 @@
  * with the control.
  */
 .button04[data-size="small"] {
-  min-height: 42px;
+  min-height: 2.625rem;
   font-size: var(--type-label-sm);
 }
 
 .button04[data-size="medium"] {
-  min-height: 52px;
+  min-height: 3.25rem;
   font-size: var(--type-label);
 }
 
 .button04[data-size="large"] {
-  min-height: 72px;
-  font-size: clamp(13px, 0.25vw + 12.1px, 17px);
+  min-height: 4.5rem;
+  font-size: clamp(0.8125rem, 0.25vw + 0.75625rem, 1.0625rem);
 }
 
 .button04[data-full-width] {
@@ -98,7 +98,7 @@
   border-radius: inherit;
   background: var(--button04-active-background);
   transform: translateX(-102%);
-  transition: transform 480ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform 100ms ease-out;
 }
 
 .button04_inner {
@@ -113,20 +113,20 @@
    * opens wide buttons. Keyed to the viewport it hit 43px, which on a 194px
    * button drove the label into the glyph.
    */
-  gap: clamp(18px, 1.4vw, 30px);
+  gap: clamp(1.125rem, 1.4vw, 1.875rem);
   width: 100%;
-  padding: 0 12px 0 19px;
+  padding: 0 0.75rem 0 1.1875rem;
 }
 
 .button04[data-size="small"] .button04_inner {
-  gap: 18px;
-  padding-right: 9px;
-  padding-left: 14px;
+  gap: 1.125rem;
+  padding-right: 0.5625rem;
+  padding-left: 0.875rem;
 }
 
 .button04[data-size="large"] .button04_inner {
-  padding-right: 15px;
-  padding-left: 26px;
+  padding-right: 0.9375rem;
+  padding-left: 1.625rem;
 }
 
 .button04_label {
@@ -157,6 +157,20 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * The exception to the ellipsis above. A full-width control has already been
+ * handed its width by its container, so a label that does not fit can spend a
+ * second line instead of losing its tail — the button grows downward and the
+ * `min-height` sizes absorb it. At a 20px default font size "Start a
+ * conversation" overran its 356px column by 13px and rendered as
+ * "Start a conversatio…" on the primary contact action, which is the one label
+ * on the page that most needs to arrive whole.
+ */
+.button04[data-full-width] .button04_text {
+  white-space: normal;
+  text-overflow: clip;
+}
+
 .button04_text.is-compact {
   display: none;
 }
@@ -171,7 +185,7 @@
 }
 
 .button04[data-hover-label] .button04_text {
-  transition: clip-path 300ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: clip-path 100ms ease-out;
 }
 
 .button04[data-hover-label]:focus-visible .button04_text:not(.is-hover) {
@@ -190,11 +204,13 @@
  * user has an outline saying which control the word belongs to.
  */
 @media (hover: hover) {
-  .button04[data-hover-label]:hover .button04_text:not(.is-hover) {
+  .button04[data-hover-label]:hover .button04_text:not(.is-hover),
+  .button04[data-hover-label]:active .button04_text:not(.is-hover) {
     clip-path: inset(0 0 0 100%);
   }
 
-  .button04[data-hover-label]:hover .button04_text.is-hover {
+  .button04[data-hover-label]:hover .button04_text.is-hover,
+  .button04[data-hover-label]:active .button04_text.is-hover {
     clip-path: inset(0 0 0 0);
   }
 }
@@ -226,8 +242,8 @@
   gap: 2px;
   place-items: center;
   transition:
-    opacity 280ms ease,
-    transform 420ms cubic-bezier(0.76, 0, 0.24, 1);
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
 }
 
 .button04_icon.is-arrow {
@@ -255,9 +271,8 @@
   border-radius: 50%;
   background: currentColor;
   transition:
-    opacity 220ms ease calc(var(--index, 0) * 24ms),
-    transform 320ms cubic-bezier(0.76, 0, 0.24, 1)
-      calc(var(--index, 0) * 24ms);
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
 }
 
 .button04_icon.is-arrow .button04_dot {
@@ -268,42 +283,57 @@
 }
 
 .button04:hover,
-.button04:focus-visible {
+.button04:focus-visible,
+.button04:active {
   color: var(--button04-active-foreground);
+}
+
+.button04:hover,
+.button04:focus-visible {
   transform: translateY(-2px);
 }
 
+.button04:active {
+  transform: scale(0.97);
+}
+
 .button04:hover .button04_bg,
-.button04:focus-visible .button04_bg {
+.button04:focus-visible .button04_bg,
+.button04:active .button04_bg {
   transform: translateX(0);
 }
 
 .button04:hover .button04_icon:not(.is-arrow),
-.button04:focus-visible .button04_icon:not(.is-arrow) {
+.button04:focus-visible .button04_icon:not(.is-arrow),
+.button04:active .button04_icon:not(.is-arrow) {
   opacity: 0;
   transform: translate(8px, -8px) rotate(12deg);
 }
 
 .button04:hover .button04_icon:not(.is-arrow) .button04_dot,
-.button04:focus-visible .button04_icon:not(.is-arrow) .button04_dot {
+.button04:focus-visible .button04_icon:not(.is-arrow) .button04_dot,
+.button04:active .button04_icon:not(.is-arrow) .button04_dot {
   opacity: 0;
   transform: scale(0.2);
 }
 
 .button04:hover .button04_icon.is-arrow,
-.button04:focus-visible .button04_icon.is-arrow {
+.button04:focus-visible .button04_icon.is-arrow,
+.button04:active .button04_icon.is-arrow {
   opacity: 1;
   transform: translate(0) rotate(-45deg);
 }
 
 .button04[data-arrow="down"]:hover .button04_icon.is-arrow,
-.button04[data-arrow="down"]:focus-visible .button04_icon.is-arrow {
+.button04[data-arrow="down"]:focus-visible .button04_icon.is-arrow,
+.button04[data-arrow="down"]:active .button04_icon.is-arrow {
   opacity: 1;
   transform: translate(0) rotate(90deg);
 }
 
 .button04:hover .button04_icon.is-arrow .button04_dot,
-.button04:focus-visible .button04_icon.is-arrow .button04_dot {
+.button04:focus-visible .button04_icon.is-arrow .button04_dot,
+.button04:active .button04_icon.is-arrow .button04_dot {
   opacity: 1;
   transform: translate(0) scale(1);
 }
@@ -319,7 +349,7 @@
   pointer-events: none;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .button04_text.is-compact {
     display: inline;
   }
@@ -339,7 +369,8 @@
   }
 
   .button04:hover,
-  .button04:focus-visible {
+  .button04:focus-visible,
+  .button04:active {
     transform: none;
   }
 }

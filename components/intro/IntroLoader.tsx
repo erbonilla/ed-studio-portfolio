@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useGsapClient } from "@/lib/use-gsap-client";
 
 const HERO_READY_EVENT = "portfolio:hero-ready";
-const MINIMUM_HOLD_MS = 1350;
+const MINIMUM_HOLD_MS = 420;
 /* A visitor who has already watched the aperture open this session gets the
    fact of the brand, not the performance of it a second time. */
-const RETURNING_HOLD_MS = 260;
+const RETURNING_HOLD_MS = 180;
 const FAILSAFE_MS = 5000;
 /* Beyond this the sequence is not late, it is broken. Runs whether or not the
    motion chunk ever arrived. */
@@ -81,7 +81,7 @@ export function IntroLoader() {
     );
     let heroReady = page.dataset.heroReady === "true";
     let minimumElapsed = false;
-    let isOpening = false;
+    let enterTimeline: ReturnType<typeof gsap.timeline> | undefined;
     let exitTimeline: ReturnType<typeof gsap.timeline> | undefined;
 
     page.classList.add("is-loading");
@@ -112,9 +112,21 @@ export function IntroLoader() {
       }
     };
 
-    const open = () => {
-      if (isOpening || !minimumElapsed || !heroReady) return;
-      isOpening = true;
+    const open = (options?: { force?: boolean }) => {
+      const force = options?.force === true;
+      // Skip must respond on pointer-down. heroReady only gates the unattended
+      // path so the exit does not race incomplete hero chrome on auto-play.
+      if (!force && (!minimumElapsed || !heroReady)) return;
+      if (exitTimeline) {
+        // Already leaving: a second tap/key inherits the live values and
+        // just arrives faster. Killing and rebuilding would jump.
+        exitTimeline.timeScale(2.6);
+        return;
+      }
+
+      enterTimeline?.kill();
+      minimumElapsed = true;
+      heroReady = true;
 
       if (abbreviated) {
         exitTimeline = gsap.timeline({ onComplete: finish }).to(root, {
@@ -126,7 +138,7 @@ export function IntroLoader() {
       }
 
       exitTimeline = gsap.timeline({
-        defaults: { ease: "power4.inOut" },
+        defaults: { ease: "power3.out" },
         onComplete: finish,
       });
 
@@ -158,8 +170,23 @@ export function IntroLoader() {
 
     window.addEventListener(HERO_READY_EVENT, onHeroReady);
 
+    const skipHold = () => {
+      minimumElapsed = true;
+      open({ force: true });
+    };
+
+    const onPointerDown = () => skipHold();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" && event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      skipHold();
+    };
+
+    root.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+
     const context = gsap.context(() => {
-      gsap
+      enterTimeline = gsap
         .timeline({ defaults: { ease: "power3.out" } })
         .fromTo(
           ".intro-wordmark",
@@ -186,7 +213,7 @@ export function IntroLoader() {
         open();
       },
       // Reduced motion and a deep link both want out immediately; a returning
-      // visitor gets a beat, not the full 1.35s hold.
+      // visitor gets a beat, not a hold.
       reducedMotion || deepLink ? 120 : returning ? RETURNING_HOLD_MS : MINIMUM_HOLD_MS,
     );
 
@@ -200,7 +227,10 @@ export function IntroLoader() {
       window.clearTimeout(minimumTimer);
       window.clearTimeout(failsafeTimer);
       window.removeEventListener(HERO_READY_EVENT, onHeroReady);
+      window.removeEventListener("keydown", onKeyDown);
+      root.removeEventListener("pointerdown", onPointerDown);
       context.revert();
+      enterTimeline?.kill();
       exitTimeline?.kill();
       page.classList.remove("is-loading");
       if (heroStage) gsap.set(heroStage, { clearProps: "scale" });
@@ -239,7 +269,7 @@ export function IntroLoader() {
         <span className="intro-seam-fill" />
       </div>
       <span className="sr-only" role="status">
-        Loading Edgar Bonilla&apos;s portfolio.
+        Loading Edgar Bonilla&apos;s portfolio. Tap, or press Escape, to enter.
       </span>
     </div>
   );

@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-12T00:00:00.000Z",
+  "title": "Design System: Edgar Bonilla G. — Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "kinetic-orange": {
+        "role": "primary",
+        "displayName": "Kinetic Orange",
+        "canonical": "#ff4f18",
+        "tonalRamp": [
+          "oklch(20% 0.09 38)",
+          "oklch(31% 0.13 38)",
+          "oklch(42% 0.17 38)",
+          "oklch(53% 0.20 38)",
+          "oklch(65% 0.22 38)",
+          "oklch(76% 0.17 38)",
+          "oklch(86% 0.10 38)",
+          "oklch(95% 0.04 38)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#050505",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(100% 0 0)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Grey",
+        "canonical": "#a3a3a3",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(255, 255, 255, 0.24)",
+        "tonalRamp": [
+          "rgba(255, 255, 255, 0.04)",
+          "rgba(255, 255, 255, 0.08)",
+          "rgba(255, 255, 255, 0.16)",
+          "rgba(255, 255, 255, 0.24)",
+          "rgba(255, 255, 255, 0.36)",
+          "rgba(255, 255, 255, 0.5)",
+          "rgba(255, 255, 255, 0.72)",
+          "rgba(255, 255, 255, 0.9)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#f2efe8",
+        "tonalRamp": [
+          "oklch(20% 0.008 85)",
+          "oklch(31% 0.010 85)",
+          "oklch(43% 0.012 85)",
+          "oklch(55% 0.014 85)",
+          "oklch(67% 0.015 85)",
+          "oklch(79% 0.014 85)",
+          "oklch(89% 0.012 85)",
+          "oklch(96% 0.008 85)"
+        ]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#111516",
+        "tonalRamp": [
+          "oklch(18% 0.006 200)",
+          "oklch(28% 0.008 200)",
+          "oklch(39% 0.010 200)",
+          "oklch(50% 0.012 200)",
+          "oklch(62% 0.012 200)",
+          "oklch(74% 0.010 200)",
+          "oklch(85% 0.007 200)",
+          "oklch(95% 0.004 200)"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#42494a",
+        "tonalRamp": [
+          "oklch(18% 0.006 200)",
+          "oklch(29% 0.008 200)",
+          "oklch(40% 0.010 200)",
+          "oklch(51% 0.011 200)",
+          "oklch(63% 0.011 200)",
+          "oklch(75% 0.009 200)",
+          "oklch(86% 0.006 200)",
+          "oklch(95% 0.003 200)"
+        ]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "#434a4b",
+        "tonalRamp": [
+          "oklch(18% 0.006 200)",
+          "oklch(29% 0.008 200)",
+          "oklch(40% 0.010 200)",
+          "oklch(51% 0.011 200)",
+          "oklch(63% 0.011 200)",
+          "oklch(75% 0.009 200)",
+          "oklch(86% 0.006 200)",
+          "oklch(95% 0.003 200)"
+        ]
+      },
+      "ember-deep": {
+        "role": "primary",
+        "displayName": "Ember Deep",
+        "canonical": "#9d3d21",
+        "tonalRamp": [
+          "oklch(18% 0.07 40)",
+          "oklch(28% 0.10 40)",
+          "oklch(38% 0.13 40)",
+          "oklch(46% 0.14 40)",
+          "oklch(58% 0.15 40)",
+          "oklch(70% 0.13 40)",
+          "oklch(83% 0.08 40)",
+          "oklch(94% 0.03 40)"
+        ]
+      },
+      "atlan-accent": {
+        "role": "tertiary",
+        "displayName": "Atlan Accent",
+        "canonical": "#ef5a2f",
+        "tonalRamp": [
+          "oklch(20% 0.08 37)",
+          "oklch(31% 0.12 37)",
+          "oklch(42% 0.16 37)",
+          "oklch(52% 0.18 37)",
+          "oklch(64% 0.19 37)",
+          "oklch(76% 0.15 37)",
+          "oklch(86% 0.09 37)",
+          "oklch(95% 0.03 37)"
+        ]
+      },
+      "atlan-deep": {
+        "role": "tertiary",
+        "displayName": "Atlan Deep",
+        "canonical": "#0c3542",
+        "tonalRamp": [
+          "oklch(18% 0.04 225)",
+          "oklch(28% 0.06 225)",
+          "oklch(39% 0.07 225)",
+          "oklch(50% 0.08 225)",
+          "oklch(62% 0.07 225)",
+          "oklch(74% 0.06 225)",
+          "oklch(85% 0.04 225)",
+          "oklch(95% 0.02 225)"
+        ]
+      },
+      "osteoplus-accent": {
+        "role": "tertiary",
+        "displayName": "Osteóplus Accent",
+        "canonical": "#d95e35",
+        "tonalRamp": [
+          "oklch(20% 0.07 40)",
+          "oklch(31% 0.10 40)",
+          "oklch(42% 0.13 40)",
+          "oklch(52% 0.15 40)",
+          "oklch(63% 0.16 40)",
+          "oklch(75% 0.13 40)",
+          "oklch(86% 0.08 40)",
+          "oklch(95% 0.03 40)"
+        ]
+      },
+      "osteoplus-deep": {
+        "role": "tertiary",
+        "displayName": "Osteóplus Deep",
+        "canonical": "#183e43",
+        "tonalRamp": [
+          "oklch(19% 0.03 210)",
+          "oklch(29% 0.05 210)",
+          "oklch(40% 0.06 210)",
+          "oklch(51% 0.06 210)",
+          "oklch(63% 0.06 210)",
+          "oklch(75% 0.05 210)",
+          "oklch(86% 0.03 210)",
+          "oklch(95% 0.015 210)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero h1 and chapter openers. Uppercase, set so tight the lines nearly touch — the block reads as a mass, not as sentences."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles and the About lead. The Work heading runs larger still at clamp(56px, 7.6vw, 144px)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Project titles and expertise area names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Narrative paragraphs and project descriptions. Measure capped tightly — the Work intro holds at 36ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Eyebrows, metadata keys, navigation, status lines, button text. The system's connective tissue; appears more often than any other role."
+      }
+    },
+    "fontLoadingDefect": {
+      "status": "unresolved",
+      "detail": "Syne and Inter are the intended faces but no next/font import exists in the project. app/globals.css:7-8 defines --font-syne as \"Arial Black\", \"Helvetica Neue\", Helvetica, Arial and --font-inter as \"Helvetica Neue\", Helvetica, Arial. The site renders in system fonts under variable names that promise otherwise. Tracking and weight values are tuned against fallback metrics and will need re-tuning once the real faces load."
+    },
+    "shadows": [
+      {
+        "name": "print-lift",
+        "value": "0 26px 60px rgba(4, 14, 18, 0.3)",
+        "purpose": "Inset detail frame in the light Work register only. Sells case-study media as a physical print on paper."
+      },
+      {
+        "name": "accent-glow",
+        "value": "0 0 24px rgba(255, 79, 24, 0.4)",
+        "purpose": "Scroll-progress and active-state indicators. Emissive, not elevational."
+      },
+      {
+        "name": "interior-warm",
+        "value": "inset 0 0 64px rgba(255, 79, 24, 0.07)",
+        "purpose": "Inset warmth inside the About ribbon field. Reads as light in a room, not a raised surface."
+      },
+      {
+        "name": "interior-amber",
+        "value": "inset 0 0 60px rgba(255, 196, 167, 0.16)",
+        "purpose": "Second-stage amber depth in the About ribbon sequence."
+      },
+      {
+        "name": "focus-ring-accent",
+        "value": "0 0 0 5px rgba(255, 79, 24, 0.11)",
+        "purpose": "Focus and status ring on circular metadata objects."
+      },
+      {
+        "name": "focus-ring-graphite",
+        "value": "0 0 0 6px #111516",
+        "purpose": "Separator ring punching a marker out of its ground."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-primary",
+        "value": "cubic-bezier(0.76, 0, 0.24, 1)",
+        "purpose": "System default for state changes and reveals. The dominant easing in the codebase."
+      },
+      {
+        "name": "ease-entrance",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Entrances and settle motion."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Neutral utility transitions."
+      },
+      {
+        "name": "gsap-entrance",
+        "value": "power3.out",
+        "purpose": "Dominant GSAP ease for copy beats and staggered entrances."
+      },
+      {
+        "name": "gsap-orchestrated",
+        "value": "power4.inOut",
+        "purpose": "Intro seam split and menu overlay reveal."
+      },
+      {
+        "name": "gsap-scrub",
+        "value": "none",
+        "purpose": "Scroll-linked scrubbing — frame sequence and progress. Linear by definition; easing a scrub breaks the scroll contract."
+      },
+      {
+        "name": "duration-state",
+        "value": "220ms",
+        "purpose": "Interactive state change (hover, focus). The dominant duration."
+      },
+      {
+        "name": "duration-component",
+        "value": "320ms",
+        "purpose": "Component-level transitions such as the arrow button glyph swap."
+      },
+      {
+        "name": "duration-reveal",
+        "value": "620ms",
+        "purpose": "Orchestrated reveals and chapter entrances."
+      }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "520px" },
+      { "name": "sm", "value": "620px" },
+      { "name": "md", "value": "900px" },
+      { "name": "lg", "value": "901px" },
+      { "name": "max", "value": "1800px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The hero's primary destination action. Square, orange, uppercase; inverts to white on hover and lifts 2px.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#work\">SELECTED WORK</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; min-height: 48px; min-width: 152px; padding: 0 17px; border: none; border-radius: 0; color: var(--ink, #050505); background: var(--brand, #ff4f18); font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: color 220ms ease, background 220ms ease, transform 220ms ease; } .ds-btn-primary:hover { color: var(--brand, #ff4f18); background: var(--white, #ffffff); transform: translateY(-2px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--brand, #ff4f18); outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Transparent companion action with a single bottom hairline. Same lift as primary; only the color logic differs.",
+      "html": "<a class=\"ds-btn-secondary\" href=\"#about\">ABOUT THE WORK</a>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; min-height: 48px; min-width: 172px; padding: 0 17px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.72); border-radius: 0; color: var(--white, #ffffff); background: transparent; font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: color 220ms ease, border-color 220ms ease, transform 220ms ease; } .ds-btn-secondary:hover { color: var(--brand, #ff4f18); border-color: var(--brand, #ff4f18); transform: translateY(-2px); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--brand, #ff4f18); outline-offset: 3px; }"
+    },
+    {
+      "name": "Arrow Button",
+      "kind": "button",
+      "refersTo": "button-arrow",
+      "description": "The signature action. Square, heavy uppercase, with a northeast-arrow glyph that translates away and back on hover.",
+      "html": "<a class=\"ds-btn-arrow\" href=\"#contact\"><span class=\"ds-btn-arrow__label\">LET'S WORK TOGETHER</span><span class=\"ds-btn-arrow__icon\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 12L12 4M12 4H5.5M12 4V10.5\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"square\" fill=\"none\"/></svg></span></a>",
+      "css": ".ds-btn-arrow { position: relative; display: inline-flex; align-items: center; gap: 28px; min-height: 48px; padding: 0 17px; overflow: hidden; border: 1px solid transparent; border-radius: 0; color: var(--ink, #050505); background: var(--brand, #ff4f18); font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 10px; font-weight: 750; line-height: 1; letter-spacing: 0.075em; text-transform: uppercase; text-decoration: none; cursor: pointer; isolation: isolate; transition: color 320ms cubic-bezier(0.76, 0, 0.24, 1), background 320ms cubic-bezier(0.76, 0, 0.24, 1), transform 220ms ease; } .ds-btn-arrow__icon { display: inline-flex; transition: transform 320ms cubic-bezier(0.76, 0, 0.24, 1); } .ds-btn-arrow:hover { color: var(--ink, #050505); background: var(--white, #ffffff); transform: translateY(-2px); } .ds-btn-arrow:hover .ds-btn-arrow__icon { transform: translate(3px, -3px); } .ds-btn-arrow:focus-visible { outline: 2px solid var(--white, #ffffff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Arrow Button — Dark",
+      "kind": "button",
+      "refersTo": "button-arrow-dark",
+      "description": "Graphite variant of the arrow button for use on the light Work register.",
+      "html": "<a class=\"ds-btn-arrow-dark\" href=\"#\">READ THE CASE STUDY</a>",
+      "css": ".ds-btn-arrow-dark { display: inline-flex; align-items: center; gap: 28px; min-height: 48px; padding: 0 17px; border: 1px solid transparent; border-radius: 0; color: var(--white, #ffffff); background: #111516; font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 10px; font-weight: 750; letter-spacing: 0.075em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: color 320ms cubic-bezier(0.76, 0, 0.24, 1), background 320ms cubic-bezier(0.76, 0, 0.24, 1), transform 220ms ease; } .ds-btn-arrow-dark:hover { color: var(--white, #ffffff); background: var(--brand, #ff4f18); transform: translateY(-2px); } .ds-btn-arrow-dark:focus-visible { outline: 2px solid #111516; outline-offset: 3px; }"
+    },
+    {
+      "name": "Proof Chip",
+      "kind": "chip",
+      "refersTo": "chip-proof",
+      "description": "Non-interactive evidence label in the light Work register. Pill-shaped by exception — radius marks it as metadata, not as an action.",
+      "html": "<ul class=\"ds-chip-row\"><li class=\"ds-chip-proof\">Functional PWA</li><li class=\"ds-chip-proof\">Session Swapper</li><li class=\"ds-chip-proof\">Wet Mode</li></ul>",
+      "css": ".ds-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; } .ds-chip-proof { padding: 9px 12px; border: 1px solid rgba(17, 21, 22, 0.2); border-radius: 999px; color: #434a4b; font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 12px; font-weight: 500; letter-spacing: 0.04em; }"
+    },
+    {
+      "name": "Section Label",
+      "kind": "custom",
+      "refersTo": "label",
+      "description": "The system's connective tissue: uppercase eyebrow with positive tracking and an orange index numeral.",
+      "html": "<p class=\"ds-label\"><span class=\"ds-label__index\">01</span><span>Adaptive endurance coaching PWA</span></p>",
+      "css": ".ds-label { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--muted, #a3a3a3); font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: clamp(12px, 1vw, 15px); font-weight: 700; line-height: 1.35; letter-spacing: 0.12em; text-transform: uppercase; } .ds-label__index { color: var(--brand, #ff4f18); }"
+    },
+    {
+      "name": "Display Heading",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "The display voice: uppercase, aggressive negative tracking, lines set so tight the block reads as a mass. Accent word in orange.",
+      "html": "<h2 class=\"ds-display\">Selected<br><span class=\"ds-display__accent\">Work</span></h2>",
+      "css": ".ds-display { margin: 0; color: var(--white, #ffffff); font-family: var(--font-syne, 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: clamp(56px, 7.6vw, 144px); font-weight: 700; line-height: 0.84; letter-spacing: -0.065em; text-transform: uppercase; } .ds-display__accent { display: block; color: var(--brand, #ff4f18); }"
+    },
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Menu overlay link: oversized display type with an orange index and square marker. Active state takes a larger orange marker and orange type.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__link ds-nav__link--active\" href=\"#home\"><span class=\"ds-nav__marker\"></span><span class=\"ds-nav__index\">01</span>Home</a><a class=\"ds-nav__link\" href=\"#about\"><span class=\"ds-nav__marker\"></span><span class=\"ds-nav__index\">02</span>About</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 4px; background: var(--ink, #050505); padding: 16px; } .ds-nav__link { display: flex; align-items: center; gap: 14px; color: var(--white, #ffffff); font-family: var(--font-syne, 'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: clamp(34px, 6.2vw, 52px); font-weight: 700; line-height: 1.05; letter-spacing: -0.045em; text-transform: uppercase; text-decoration: none; transition: color 220ms ease; } .ds-nav__marker { width: 9px; height: 9px; background: var(--white, #ffffff); transition: background 220ms ease, transform 220ms ease; } .ds-nav__index { color: var(--brand, #ff4f18); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; } .ds-nav__link:hover { color: var(--brand, #ff4f18); } .ds-nav__link--active { color: var(--brand, #ff4f18); } .ds-nav__link--active .ds-nav__marker { background: var(--brand, #ff4f18); transform: scale(1.5); } .ds-nav__link:focus-visible { outline: 2px solid var(--brand, #ff4f18); outline-offset: 4px; }"
+    },
+    {
+      "name": "Project Media Frame",
+      "kind": "card",
+      "refersTo": "media-frame",
+      "description": "The light register's only rounded, shadowed surface. Presents case-study media as a physical print on paper. Not a card — there is no card primitive in this system.",
+      "html": "<figure class=\"ds-media\"><div class=\"ds-media__fill\"></div><figcaption class=\"ds-media__caption\">Silent loop of a swimmer pushing away from the pool wall at sunrise.</figcaption></figure>",
+      "css": ".ds-media { position: relative; margin: 0; overflow: hidden; border-radius: 28px; background: #111516; box-shadow: 0 26px 60px rgba(4, 14, 18, 0.3); } .ds-media__fill { aspect-ratio: 16 / 9; background: linear-gradient(135deg, #0c3542, #111516 60%, #ef5a2f); } .ds-media__caption { position: absolute; left: 20px; bottom: 16px; margin: 0; color: rgba(255, 255, 255, 0.78); font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 12px; letter-spacing: 0.04em; }"
+    },
+    {
+      "name": "Hairline Divider",
+      "kind": "custom",
+      "refersTo": "hairline",
+      "description": "The only divider treatment on the dark register. Borders in this system are always hairlines, never heavy strokes.",
+      "html": "<div class=\"ds-divider-demo\"><span>LOCATION</span><hr class=\"ds-hairline\"><span>Zarcero, Costa Rica</span></div>",
+      "css": ".ds-divider-demo { display: flex; flex-direction: column; gap: 10px; color: var(--muted, #a3a3a3); font-family: var(--font-inter, 'Helvetica Neue', Helvetica, Arial, sans-serif); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; } .ds-hairline { width: 100%; height: 0; margin: 0; border: none; border-top: 1px solid rgba(255, 255, 255, 0.24); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Aperture",
+    "overview": "Every surface behaves like an optical instrument resolving focus. The site opens as a solid orange field that splits along a horizontal seam like a shutter; the hero scrubs a 195-frame portrait sequence from obstruction into clarity; the About portrait reveals its monochrome layer through a liquid aperture that follows the pointer. Nothing here is decoration borrowed from a template — the entire visual argument is a lens finding its subject, and the subject is the designer's own judgment.\n\nThe system is dark, dense, and type-led. Near-black is the ground state, oversized uppercase display type is the structure, and a single kinetic orange carries every moment of movement and intent. Interactive surfaces are square-cornered and flat; depth arrives through tonal layering, film grain, blur, and real photography rather than through drop shadows. The result reads as a screening room rather than a product page: quiet material, loud typography, and motion that means something.\n\nThe system runs in two registers. The dark register (intro, hero, About, Contact) is the default: near-black ground, hard edges, orange accent, atmospheric depth. The light register (the Work chapter) inverts to warm paper with graphite ink, and is the one place where rounded media frames and real drop shadows are sanctioned — the case studies present as physical prints laid on a table. Treat the switch as a deliberate chapter break, not as drift.",
+    "keyCharacteristics": [
+      "Near-black ground (#050505) with a single accent — no secondary or tertiary palette",
+      "Oversized uppercase display type with hard negative tracking (down to -0.065em)",
+      "Square corners on everything interactive; radius is reserved for media and metadata",
+      "Scroll is the primary interaction verb; motion is choreographed, never ambient",
+      "Film grain and tonal layering instead of elevation",
+      "Every animated surface ships a genuine reduced-motion path"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "There is exactly one accent in this system. When a new state needs distinction, reach for weight, scale, case, or tonal value — never for a second hue. Per-project accents are scoped to their story block and are not exceptions to this.",
+        "section": "colors"
+      },
+      {
+        "name": "The Vibration Rule",
+        "body": "#ff4f18 on #f2efe8 vibrates at body sizes. On the light register, orange is permitted for large display type and fills, but running text uses Ember Deep (#9d3d21) instead.",
+        "section": "colors"
+      },
+      {
+        "name": "The Single H1 Rule",
+        "body": "The portfolio hero owns the page's only h1. Every chapter below opens at h2. This is an accessibility invariant, not a preference.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracking Inversion Rule",
+        "body": "Display type tracks negative (-0.045em to -0.065em); label type tracks positive (0.1em to 0.15em). The two never meet in the middle — a heading at neutral tracking is a defect in this system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Uppercase Structure Rule",
+        "body": "Uppercase carries structure (display, labels, navigation, buttons). Sentence case carries reading (body paragraphs). Never uppercase a paragraph and never sentence-case a label.",
+        "section": "typography"
+      },
+      {
+        "name": "The Anchored Action Rule",
+        "body": "Hero destination actions sit outside the copy-beat timeline. They stay anchored and interactive for the full pinned sequence — the visitor can act at any scroll position without waiting for a beat to finish.",
+        "section": "layout"
+      },
+      {
+        "name": "The Scan Path Rule",
+        "body": "Identity, role, domains, and location remain readable without interaction at every breakpoint. No motion, hover, or scroll state may be the only way to reach them.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-Interactive Rule",
+        "body": "Buttons, links, chips, and navigation never carry a drop shadow in either register. If an element needs to feel raised, it is the wrong element.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Light-Register Exception",
+        "body": "Drop shadows exist only in the Work chapter, only on media frames, and only to sell physicality. Introducing one in the dark register is drift.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Zero-Radius Rule",
+        "body": "If it can be clicked, its corners are square. A rounded button is not this system.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Radius Is Content Rule",
+        "body": "Radius marks something as either an image or a piece of metadata. It never marks something as an action.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep border-radius: 0 on every interactive element. Square corners are the form signature.",
+      "Do use exactly one accent. Distinguish new states with weight, scale, case, or tonal value.",
+      "Do track display type negative (-0.045em to -0.065em) and label type positive (0.1em to 0.15em).",
+      "Do build depth from tonal layering, grain, blur, and real imagery.",
+      "Do ship a genuine prefers-reduced-motion path with every animated surface — a static composition that still communicates, not a stripped one.",
+      "Do keep the hero's h1 the page's only h1.",
+      "Do switch to Ember Deep (#9d3d21) for orange running text on the light register.",
+      "Do scope per-project accents to their story block.",
+      "Do let display type grow proportionally larger as the viewport narrows."
+    ],
+    "donts": [
+      "Don't introduce a rounded button, a card component, or a card grid. PRODUCT.md names card-heavy template grids as an anti-reference, and the absence of a card primitive is what keeps the chapters full-bleed and cinematic.",
+      "Don't add a drop shadow to the dark register, or to any interactive element in either register.",
+      "Don't add a second accent hue, a gradient on text, or a gradient as a surface treatment.",
+      "Don't add a second WebGL context. Three.js is dynamically imported and hero-only; the About reveal stays on Canvas 2D.",
+      "Don't introduce Tailwind or a utility-class layer — the system is hand-authored CSS with custom properties.",
+      "Don't let motion run without narrative purpose. Ambient, looping, or decorative animation is drift.",
+      "Don't put #ff4f18 in running text on #f2efe8.",
+      "Don't neutralize display tracking. A heading at letter-spacing: normal is a defect here.",
+      "Don't let a planned-but-unbuilt destination behave like a working page."
+    ]
+  }
+}

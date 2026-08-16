@@ -1,6 +1,6 @@
 .section {
   position: relative;
-  padding: clamp(72px, 8vw, 128px) clamp(10px, 1.2vw, 20px) clamp(10px, 1.2vw, 20px);
+  padding: clamp(4.5rem, 8vw, 8rem) clamp(0.625rem, 1.2vw, 1.25rem) clamp(0.625rem, 1.2vw, 1.25rem);
   overflow: hidden;
   color: var(--brand);
   background: var(--ink);
@@ -21,8 +21,8 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  min-height: 68px;
-  margin: 0 clamp(18px, 2.5vw, 40px);
+  min-height: 4.25rem;
+  margin: 0 var(--gutter-inner);
   border-bottom: 1px solid rgba(255, 79, 24, 0.35);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -37,12 +37,12 @@
 .topline p:nth-child(2) {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 0.5625rem;
 }
 
 .topline a {
   justify-self: end;
-  padding: 12px 0;
+  padding: 0.75rem 0;
   text-decoration: none;
 }
 
@@ -60,6 +60,11 @@
   color: var(--white);
 }
 
+.topline a:active,
+.utility a:active {
+  opacity: 0.72;
+}
+
 /*
  * Touch sizing for the Contact chapter. This is the conversion moment on the
  * page and it held the three smallest targets on it: the address link was 15px
@@ -71,18 +76,18 @@
   .topline a {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: 2.75rem;
     padding: 0;
   }
 
   .directRow a {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: 2.75rem;
   }
 
   .copyEmail {
-    min-height: 44px;
+    min-height: 2.75rem;
   }
 }
 
@@ -97,7 +102,7 @@
 .conversation {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
-  gap: clamp(48px, 8vw, 140px);
+  gap: clamp(3rem, 8vw, 8.75rem);
   align-items: end;
   /*
    * The columns are bottom-anchored by design and at desktop widths the
@@ -105,7 +110,7 @@
    * Lowered so it stops adding arbitrary height when it does apply.
    */
   min-height: clamp(360px, 32vw, 500px);
-  padding: clamp(54px, 7vw, 112px) clamp(18px, 5vw, 80px) clamp(42px, 5vw, 76px);
+  padding: clamp(3.375rem, 7vw, 7rem) clamp(1.125rem, 5vw, 5rem) clamp(2.625rem, 5vw, 4.75rem);
 }
 
 .splitHeadline {
@@ -113,10 +118,10 @@
   max-width: 6.2ch;
   color: var(--white);
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(64px, 9.5vw, 160px);
+  font-size: clamp(4rem, 9.5vw, 10rem);
   font-weight: 700;
   line-height: 0.78;
-  letter-spacing: -0.075em;
+  letter-spacing: var(--display-track-xl);
   text-transform: uppercase;
 }
 
@@ -126,21 +131,21 @@
 
 .action {
   align-self: end;
-  padding-bottom: 4px;
+  padding-bottom: 0.25rem;
 }
 
 .action > p {
-  max-width: 480px;
-  margin: 0 0 32px;
+  max-width: 30rem;
+  margin: 0 0 2rem;
   color: rgba(255, 255, 255, 0.66);
-  font-size: clamp(14px, 1.15vw, 18px);
+  font-size: clamp(0.875rem, 0.376vw + 0.787rem, 1.125rem);
   line-height: 1.55;
 }
 
 .contactActions {
   display: grid;
-  gap: 12px;
-  max-width: 480px;
+  gap: 0.75rem;
+  max-width: 30rem;
 }
 
 /* EN and ES are peers. The Spanish résumé used to be a small underlined link
@@ -154,7 +159,7 @@
 .resumePair {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 /*
@@ -164,15 +169,15 @@
 .availability {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px clamp(20px, 2.4vw, 36px);
-  max-width: 480px;
-  margin: clamp(26px, 3vw, 40px) 0 clamp(30px, 3.4vw, 46px);
-  padding-top: clamp(22px, 2.4vw, 32px);
+  gap: 1.125rem clamp(1.25rem, 2.4vw, 2.25rem);
+  max-width: 30rem;
+  margin: clamp(1.625rem, 3vw, 2.5rem) 0 clamp(1.875rem, 3.4vw, 2.875rem);
+  padding-top: clamp(1.375rem, 2.4vw, 2rem);
   border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .availability dt {
-  margin-bottom: 5px;
+  margin-bottom: 0.3125rem;
   color: var(--muted);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -183,7 +188,7 @@
 .availability dd {
   margin: 0;
   color: var(--white);
-  font-size: clamp(13px, 0.19vw + 12.3px, 15px);
+  font-size: clamp(0.8125rem, 0.19vw + 0.76875rem, 0.9375rem);
   line-height: 1.5;
 }
 
@@ -192,7 +197,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: 0.625rem 0.875rem;
 }
 
 /* One pass of light across the address on a successful copy — the aperture
@@ -201,9 +206,9 @@
 .directRow::after {
   content: "";
   position: absolute;
-  top: -4px;
-  bottom: -4px;
-  left: -6px;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  left: -0.375rem;
   width: 34%;
   pointer-events: none;
   opacity: 0;
@@ -232,8 +237,8 @@
 }
 
 .copyEmail {
-  min-height: 32px;
-  padding: 0 11px;
+  min-height: 2rem;
+  padding: 0 0.6875rem;
   color: var(--white);
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.32);
@@ -244,7 +249,11 @@
   font-weight: 700;
   letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
-  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 100ms ease-out;
 }
 
 .copyEmail[data-copied="true"] {
@@ -292,6 +301,10 @@
   .directRow[data-copied="true"]::after {
     animation: none;
   }
+
+  .copyEmail:active {
+    transform: none;
+  }
 }
 
 .copyEmail:hover,
@@ -299,6 +312,10 @@
   color: var(--ink);
   background: var(--brand);
   border-color: var(--brand);
+}
+
+.copyEmail:active {
+  transform: scale(0.97);
 }
 
 .copyEmail:focus-visible {
@@ -330,7 +347,7 @@
   width: auto;
   height: auto;
   max-width: 46ch;
-  margin: 10px 0 0;
+  margin: 0.625rem 0 0;
   overflow: visible;
   clip: auto;
   white-space: normal;
@@ -347,19 +364,19 @@
 .utility {
   display: grid;
   grid-template-columns: 1.1fr 0.7fr 1fr;
-  margin: 0 clamp(18px, 2.5vw, 40px);
+  margin: 0 var(--gutter-inner);
   border-top: 1px solid rgba(255, 79, 24, 0.35);
   border-bottom: 1px solid rgba(255, 79, 24, 0.35);
 }
 
 .utility > div {
   display: grid;
-  gap: 10px;
-  min-height: 90px;
-  padding: 20px clamp(16px, 2vw, 30px);
+  gap: 0.625rem;
+  min-height: 5.625rem;
+  padding: 1.25rem clamp(1rem, 2vw, 1.875rem);
   border-right: 1px solid rgba(255, 79, 24, 0.35);
   align-content: center;
-  font-size: clamp(12px, 1vw, 15px);
+  font-size: clamp(0.75rem, 0.282vw + 0.684rem, 0.9375rem);
 }
 
 .utility > div:first-child {
@@ -385,13 +402,13 @@
 .socialLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .socialLink {
   display: grid;
-  width: 40px !important;
-  height: 40px;
+  width: 2.5rem !important;
+  height: 2.5rem;
   place-items: center;
   border: 1px solid rgba(255, 79, 24, 0.5);
   border-radius: 50%;
@@ -402,7 +419,7 @@
     color 220ms ease,
     background-color 220ms ease,
     border-color 220ms ease,
-    transform 280ms cubic-bezier(0.76, 0, 0.24, 1);
+    transform 100ms ease-out;
 }
 
 .socialLink:hover,
@@ -411,6 +428,13 @@
   background: var(--brand);
   border-color: var(--brand);
   transform: translateY(-3px);
+}
+
+.socialLink:active {
+  color: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
+  transform: scale(0.97);
 }
 
 .socialLink:focus-visible {
@@ -424,7 +448,7 @@
   min-height: 16px;
   place-items: center;
   font-family: var(--font-inter), Arial, sans-serif;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -433,17 +457,17 @@
 
 .socialIcon[data-platform="linkedin"] {
   padding-top: 1px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .socialIcon[data-platform="facebook"] {
   padding-top: 3px;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-family: Arial, sans-serif;
 }
 
 .socialIcon[data-platform="x"] {
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: -0.12em;
 }
 
@@ -479,7 +503,7 @@
   display: grid;
   width: 100%;
   min-height: clamp(180px, 20vw, 360px);
-  padding: clamp(28px, 3vw, 52px) clamp(18px, 2.5vw, 40px);
+  padding: clamp(1.75rem, 3vw, 3.25rem) var(--gutter-inner);
   overflow: hidden;
   place-items: center;
 }
@@ -501,7 +525,7 @@
      357px of a 317px opening. 15cqw is the value that actually lands the ~91%
      full-bleed the design wants, with slack for the fallback face and for the
      shuffle effect's transient per-character spans. */
-  font-size: min(15cqw, 300px);
+  font-size: min(15cqw, 18.75rem);
   font-weight: 700;
   line-height: 0.72;
   letter-spacing: -0.09em;
@@ -515,8 +539,8 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  min-height: 66px;
-  margin: 0 clamp(18px, 2.5vw, 40px);
+  min-height: 4.125rem;
+  margin: 0 var(--gutter-inner);
   border-top: 1px solid rgba(255, 79, 24, 0.35);
   font-size: var(--type-label-sm);
   font-weight: 700;
@@ -536,10 +560,10 @@
   text-align: right;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 56.25em) {
   .conversation {
     grid-template-columns: 1fr;
-    gap: 52px;
+    gap: 3.25rem;
   }
 
   /*
@@ -556,7 +580,7 @@
     grid-template-areas:
       "copy availability"
       "actions actions";
-    gap: 30px 36px;
+    gap: 1.875rem 2.25rem;
     align-items: start;
   }
 
@@ -575,9 +599,9 @@
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 42.5em) {
   .section {
-    padding-top: 52px;
+    padding-top: 3.25rem;
   }
 
   .shell {
@@ -595,11 +619,12 @@
 
   .conversation {
     min-height: auto;
-    padding-top: 72px;
+    padding-top: 4.5rem;
   }
 
   .splitHeadline {
-    font-size: clamp(58px, 19vw, 92px);
+    font-size: clamp(3.625rem, 19vw, 5.75rem);
+    letter-spacing: var(--display-track-lg);
   }
 
   .action {
@@ -608,12 +633,12 @@
 
   .availability {
     grid-template-columns: 1fr;
-    gap: 14px;
-    margin: 26px 0 30px;
+    gap: 0.875rem;
+    margin: 1.625rem 0 1.875rem;
   }
 
   .action > p {
-    margin-bottom: 28px;
+    margin-bottom: 1.75rem;
   }
 
   .utility {
@@ -621,7 +646,7 @@
   }
 
   .utility > div {
-    min-height: 78px;
+    min-height: 4.875rem;
     padding-left: 0;
     border-right: 0;
     border-bottom: 1px solid rgba(255, 79, 24, 0.35);
@@ -632,13 +657,13 @@
   }
 
   .socialLink {
-    width: 44px !important;
-    height: 44px;
+    width: 2.75rem !important;
+    height: 2.75rem;
   }
 
   .signature {
-    min-height: 150px;
-    padding-block: 34px 30px;
+    min-height: 9.375rem;
+    padding-block: 2.125rem 1.875rem;
   }
 
   .footer {
@@ -656,11 +681,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .socialLink {
-    transition: none;
+    transition:
+      color 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease;
   }
 
   .socialLink:hover,
-  .socialLink:focus-visible {
+  .socialLink:focus-visible,
+  .socialLink:active {
     transform: none;
   }
 }

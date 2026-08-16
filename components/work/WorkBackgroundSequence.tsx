@@ -2,10 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { useGsapClient } from "@/lib/use-gsap-client";
+import {
+  edgeStretch,
+  project,
+  rubberbandedUnit,
+  unboundedProgress,
+} from "@/lib/fluid-motion";
 import styles from "./WorkBackgroundSequence.module.css";
 
 const FRAME_COUNT = 240;
-const MAX_DECODED_FRAMES = 18;
+/* 18 of 240 left large gaps under a fast fling — nearest-decoded jumps read as strobing. */
+const MAX_DECODED_FRAMES = 48;
 const PREFETCH_CONCURRENCY = 8;
 
 function frameSource(index: number) {
@@ -38,6 +45,8 @@ export function WorkBackgroundSequence() {
     let targetFrame = reducedMotion ? Math.floor((FRAME_COUNT - 1) * 0.38) : 0;
     let previousTargetFrame = targetFrame;
     let scrollDirection = 1;
+    let frameVelocity = 0; // frames / second
+    let lastSampleTime = performance.now();
     let renderedFrame = -1;
     let animationFrame = 0;
     let disposed = false;
@@ -178,9 +187,42 @@ export function WorkBackgroundSequence() {
       return request;
     };
 
+    const buildDecodeOffsets = (direction: number, velocity: number) => {
+      /*
+       * Project where a fling will settle (same exponential decay as scroll),
+       * then decode toward that point — without changing the scrubbed settle
+       * itself. Native scroll still owns momentum; we only fill the bitmap gap.
+       */
+      const coastFrames = Math.abs(project(velocity));
+      const ahead = Math.min(16, Math.max(4, Math.ceil(coastFrames) + 2));
+      const behind = 3;
+      const offsets: number[] = [0];
+
+      for (let step = 1; step <= ahead; step += 1) {
+        offsets.push(direction * step);
+      }
+      for (let step = 1; step <= behind; step += 1) {
+        offsets.push(-direction * step);
+      }
+
+      return offsets;
+    };
+
     const requestFrame = (index: number) => {
       const nextFrame = Math.max(0, Math.min(FRAME_COUNT - 1, index));
-      scrollDirection = nextFrame >= previousTargetFrame ? 1 : -1;
+      const now = performance.now();
+      const dt = Math.max(1, now - lastSampleTime);
+      const deltaFrames = nextFrame - previousTargetFrame;
+
+      if (deltaFrames !== 0) {
+        const instant = (deltaFrames / dt) * 1000;
+        frameVelocity = frameVelocity * 0.65 + instant * 0.35;
+        scrollDirection = deltaFrames >= 0 ? 1 : -1;
+      } else {
+        frameVelocity *= 0.85;
+      }
+
+      lastSampleTime = now;
       previousTargetFrame = nextFrame;
       targetFrame = nextFrame;
 
@@ -188,14 +230,23 @@ export function WorkBackgroundSequence() {
 
       animationFrame = window.requestAnimationFrame(() => {
         animationFrame = 0;
-        const decodeOrder =
-          scrollDirection > 0
-            ? [0, 1, 2, 3, 4, -1, -2]
-            : [0, -1, -2, -3, -4, 1, 2];
+        const direction = Math.abs(frameVelocity) < 8 ? scrollDirection : Math.sign(frameVelocity) || scrollDirection;
+        const decodeOrder = buildDecodeOffsets(direction, frameVelocity);
 
         decodeOrder.forEach((offset) => {
           void decodeFrame(targetFrame + offset);
         });
+
+        // Also warm the projected rest frame so a fling does not land on empty slots.
+        const projectedFrame = Math.round(
+          Math.max(0, Math.min(FRAME_COUNT - 1, targetFrame + project(frameVelocity))),
+        );
+        if (projectedFrame !== targetFrame) {
+          void decodeFrame(projectedFrame);
+          void decodeFrame(projectedFrame + direction);
+          void decodeFrame(projectedFrame + direction * 2);
+        }
+
         drawNearestDecodedFrame();
       });
     };
@@ -256,9 +307,20 @@ export function WorkBackgroundSequence() {
         start: "top top",
         end: "bottom bottom",
         invalidateOnRefresh: true,
-        onUpdate: ({ progress }) => {
-          section.style.setProperty("--work-background-progress", progress.toFixed(4));
-          requestFrame(Math.round(progress * (FRAME_COUNT - 1)));
+        onUpdate: (self) => {
+          const range = Math.max(1, self.end - self.start);
+          const rubberbanded = rubberbandedUnit(
+            unboundedProgress(self.scroll(), self.start, self.end),
+            range,
+          );
+          const clamped = Math.max(0, Math.min(1, rubberbanded));
+          section.style.setProperty("--work-background-progress", clamped.toFixed(4));
+          requestFrame(Math.round(rubberbanded * (FRAME_COUNT - 1)));
+          const stretch = edgeStretch(rubberbanded);
+          canvas.style.transform =
+            stretch === 0
+              ? ""
+              : `translate3d(0, ${stretch * -48}px, 0) scale(${1.025 + Math.abs(stretch) * 0.04})`;
         },
       });
     } else {

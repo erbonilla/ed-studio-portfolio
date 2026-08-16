@@ -11,8 +11,8 @@
   min-height: 100svh;
   display: grid;
   align-content: center;
-  padding: clamp(96px, 12vw, 168px) clamp(20px, 3.4vw, 56px)
-    clamp(72px, 9vw, 132px);
+  padding: clamp(6rem, 12vw, 10.5rem) var(--gutter)
+    clamp(4.5rem, 9vw, 8.25rem);
   overflow: hidden;
   color: var(--white);
   background: var(--ink);
@@ -40,13 +40,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px 20px;
-  margin: 0 0 clamp(28px, 4vw, 52px);
+  gap: 0.5rem 1.25rem;
+  margin: 0 0 clamp(1.75rem, 4vw, 3.25rem);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-label);
   font-weight: 700;
   line-height: 1.35;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
 
@@ -58,7 +58,7 @@
 .seam {
   display: block;
   height: 1px;
-  margin: 0 0 clamp(28px, 4vw, 52px);
+  margin: 0 0 clamp(1.75rem, 4vw, 3.25rem);
   background: var(--line);
 }
 
@@ -66,10 +66,10 @@
   max-width: 16ch;
   margin: 0;
   font-family: var(--font-syne), Arial, sans-serif;
-  font-size: clamp(44px, 6.6vw, 108px);
+  font-size: clamp(2.75rem, 6.6vw, 6.75rem);
   font-weight: 700;
   line-height: 0.86;
-  letter-spacing: -0.055em;
+  letter-spacing: var(--display-track-lg);
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
@@ -84,9 +84,9 @@
 
 .body {
   width: min(52ch, 100%);
-  margin: clamp(26px, 3vw, 40px) 0 0;
+  margin: clamp(1.625rem, 3vw, 2.5rem) 0 0;
   color: rgba(255, 255, 255, 0.78);
-  font-size: clamp(16px, 1.15vw, 19px);
+  font-size: clamp(1rem, 0.282vw + 0.934rem, 1.1875rem);
   line-height: 1.55;
 }
 
@@ -94,22 +94,22 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-top: clamp(32px, 4vw, 52px);
+  gap: 0.875rem;
+  margin-top: clamp(2rem, 4vw, 3.25rem);
 }
 
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 26px;
-  margin: clamp(40px, 5vw, 72px) 0 0;
-  padding-top: 20px;
+  gap: 0.5rem 1.625rem;
+  margin: clamp(2.5rem, 5vw, 4.5rem) 0 0;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--type-label-sm);
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track-sm);
   text-transform: uppercase;
 }
 
@@ -137,12 +137,12 @@
 .digest {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin: clamp(22px, 2.6vw, 32px) 0 0;
-  padding: 9px 13px;
+  gap: 0.625rem;
+  margin: clamp(1.375rem, 2.6vw, 2rem) 0 0;
+  padding: 0.5625rem 0.8125rem;
   border: 1px solid var(--line);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--type-label-sm);
   line-height: 1.35;
   letter-spacing: 0.06em;
   user-select: all;
@@ -151,14 +151,15 @@
 .digest b {
   color: rgba(255, 255, 255, 0.62);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   user-select: none;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 38.75em) {
   .heading {
-    font-size: clamp(38px, 12.5vw, 62px);
+    font-size: clamp(2.375rem, 12.5vw, 3.875rem);
+    letter-spacing: var(--display-track-sm);
   }
 
   .actions > * {
